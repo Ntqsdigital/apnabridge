@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jobs | ApnaBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: url('https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      color: #fff;
+      margin: 0;
+    }
+    header {
+      background: rgba(0, 119, 182, 0.9);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 50px;
+    }
+    .logo { font-size: 22px; font-weight: bold; color: #fff; cursor: pointer; }
+    .logo span { color: #ffdd00; }
+    .header-buttons { display: flex; gap: 10px; }
+    button {
+      background: #ffdd00;
+      color: #000;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    main {
+      background: rgba(0,0,0,0.6);
+      margin: 60px auto;
+      width: 85%;
+      border-radius: 10px;
+      padding: 30px;
+      text-align: center;
+    }
+    .job-card {
+      background: #fff;
+      color: #333;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 15px 0;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+    /* 🔥 Trending Section Styles */
+    .trending {
+      background: rgba(0,0,0,0.7);
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 30px;
+    }
+    .trending h2 {
+      color: #ffdd00;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .trending ul {
+      list-style: none;
+      padding: 0;
+      text-align: center;
+    }
+    .trending li {
+      margin: 8px 0;
+    }
+    .trending a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .trending a:hover {
+      color: #ffdd00;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" onclick="window.location.href='index.html'">Apna<span>Bridge</span></div>
+    <div class="header-buttons">
+      <button onclick="window.location.href='index.html'">🏠 Home</button>
+      <button onclick="window.location.href='add-job.html'">+ Add Job</button>
+    </div>
+  </header>
+
+  <main>
+    <h2>Available Jobs</h2>
+    <div id="jobsContainer"></div>
+
+    <!-- 🔥 Trending Section -->
+    <section class="trending">
+      <h2>🔥 Trending Listings</h2>
+      <ul id="trendingList"></ul>
+    </section>
+  </main>
+
+  <script>
+  async function fetchJobs() {
+    const res = await fetch("http://127.0.0.1:5000/jobs");
+    const jobs = await res.json();
+    const container = document.getElementById("jobsContainer");
+    container.innerHTML = "";
+
+    jobs.forEach(job => {
+      container.innerHTML += `
+        <div class="job-card" onclick="viewJob(${job.id})" style="cursor:pointer;">
+          <h3>${job.title}</h3>
+          <p><strong>${job.company}</strong> | ${job.location}</p>
+          <p>${job.description}</p>
+        </div>
+      `;
+    });
+  }
+
+  function viewJob(id) {
+    // go to job details page with id
+    window.location.href = `/job_details?id=${id}`;
+  }
+
+  fetchJobs();
+</script>
+
+
+
+

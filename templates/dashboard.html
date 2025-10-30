@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | ApnaBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+      color: #333;
+      min-height: 100vh;
+      display: flex; justify-content: center; align-items: center;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+    }
+    .dashboard {
+      position: relative;
+      z-index: 2;
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      animation: fadeIn 0.8s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+      color: #0077b6;
+      margin-bottom: 15px;
+    }
+    p {
+      color: #555;
+      margin-bottom: 25px;
+    }
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    button {
+      background: #ffdd00;
+      color: #000;
+      border: none;
+      padding: 12px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #ffd43b;
+    }
+    .logout-btn {
+      background: #ff4d4d;
+      color: #fff;
+    }
+    .logout-btn:hover {
+      background: #e63946;
+    }
+    @media (max-width: 480px) {
+      .dashboard {
+        padding: 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard">
+    <h1>Welcome, <span id="username">User</span> 👋</h1>
+    <p>Glad to see you back at ApnaBridge! What would you like to do today?</p>
+
+    <div class="btn-group">
+      <button onclick="window.location.href='jobs.html'">Explore Jobs</button>
+      <button onclick="window.location.href='rentals.html'">Explore Rentals</button>
+      <button onclick="window.location.href='add-job.html'">Post a Job</button>
+      <button onclick="window.location.href='add-rental.html'">Add Rental</button>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <script>
+    // Example: retrieve username from localStorage (if you set it on login/register)
+    const username = localStorage.getItem("apna_username") || "User";
+    document.getElementById("username").textContent = username;
+
+    function logout() {
+      localStorage.removeItem("apna_username");
+      alert("Logged out successfully!");
+      window.location.href = "login.html";
+    }
+  </script>
+
+</body>
+</html>

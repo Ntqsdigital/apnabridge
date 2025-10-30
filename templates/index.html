@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ApnaBridge | Jobs & Rentals</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Poppins", sans-serif; background: #f7f8fa; color: #333; overflow-x: hidden; }
+
+    .navbar {
+      background: #0077b6;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 50px;
+      color: #fff;
+      position: sticky; top: 0; z-index: 1000;
+    }
+    .nav-left { display: flex; align-items: center; gap: 10px; }
+    .menu-icon { font-size: 24px; cursor: pointer; transition: 0.3s; }
+    .menu-icon:hover { transform: scale(1.1); }
+    .logo { font-size: 22px; font-weight: bold; cursor: pointer; }
+    .logo span { color: #ffdd00; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .list-btn {
+      background: #ffdd00; color: #000; border: none;
+      padding: 6px 12px; border-radius: 5px; font-weight: 600; cursor: pointer;
+      transition: 0.3s;
+    }
+    .list-btn:hover { background: #ffd43b; }
+    .profile-icon {
+      width: 35px; height: 35px; border-radius: 50%;
+      background: #fff; display: flex; justify-content: center; align-items: center;
+      color: #0077b6; font-weight: bold; cursor: pointer; transition: 0.3s;
+    }
+    .profile-icon:hover { transform: scale(1.1); }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed; left: -260px; top: 0; height: 100%; width: 250px;
+      background: #023e8a; color: white; padding: 20px;
+      transition: left 0.3s ease; z-index: 2000;
+    }
+    .sidebar.active { left: 0; }
+    .sidebar h2 { color: #ffdd00; margin-bottom: 20px; }
+    .sidebar a {
+      display: block; color: #fff; text-decoration: none;
+      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.2);
+      transition: 0.3s;
+    }
+    .sidebar a:hover { color: #ffdd00; padding-left: 5px; }
+    .logout-btn {
+      background: #ff4d4d; color: white; border: none; padding: 10px;
+      width: 100%; border-radius: 5px; font-weight: 600; cursor: pointer;
+      margin-top: 20px; transition: background 0.3s;
+    }
+    .logout-btn:hover { background: #e60000; }
+
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      display: none; z-index: 1500;
+    }
+    .overlay.active { display: block; }
+
+    /* Hero Section */
+    .hero {
+      background: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1500&q=80') center/cover no-repeat;
+      height: 480px; display: flex; justify-content: center; align-items: center;
+      position: relative; color: white; text-align: center;
+    }
+    .hero::before {
+      content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.55);
+    }
+    .hero-content { position: relative; z-index: 2; }
+    .hero-content h1 { font-size: 42px; margin-bottom: 10px; }
+    .hero-content p { font-size: 18px; margin-bottom: 25px; }
+
+    .search-container {
+      display: flex; justify-content: center; align-items: center;
+      gap: 10px; background: rgba(255, 255, 255, 0.9);
+      padding: 12px 15px; border-radius: 50px;
+      max-width: 650px; margin: 0 auto 20px;
+    }
+    .search-container input, .search-container select {
+      padding: 10px 15px; border: none; outline: none;
+      border-radius: 30px; font-size: 15px; width: 45%;
+    }
+    .search-container button {
+      background: #0077b6; color: white; border: none;
+      padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600;
+      transition: 0.3s;
+    }
+    .search-container button:hover { background: #023e8a; }
+
+    /* Services */
+    .services {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px; padding: 40px 50px;
+    }
+    .service-card {
+      background: white; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 30px; text-align: center; transition: transform 0.3s;
+    }
+    .service-card:hover { transform: translateY(-5px); }
+    .service-card h3 { color: #0077b6; margin-bottom: 10px; }
+    .service-card p { font-size: 14px; color: #555; }
+    .service-card img {
+      width: 100%; border-radius: 8px; height: 180px; object-fit: cover; margin-bottom: 15px;
+    }
+
+    /* Trending Section */
+    .trending-section {
+      padding: 40px 10%;
+      background: #f9f9f9;
+    }
+    .trending-section h2 {
+      text-align: center;
+      color: #0077b6;
+      margin-bottom: 30px;
+    }
+    .trending-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+    .column h3 {
+      color: #023e8a;
+      margin-bottom: 15px;
+    }
+    .listing-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: transform .12s;
+    }
+    .listing-card:hover { transform: translateY(-4px); }
+    .listing-card h4 { color: #03045e; margin-bottom: 5px; }
+    .listing-card p { margin: 3px 0; color: #555; }
+    .listing-link { text-decoration: none; color: inherit; display:block; }
+    @media (max-width: 768px) {
+      .trending-columns { grid-template-columns: 1fr; }
+    }
+
+    footer {
+      background: #0077b6; color: white;
+      padding: 40px 50px; display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;
+    }
+    footer h3 { margin-bottom: 15px; color: #ffdd00; }
+    footer p, footer a { color: #f1f1f1; font-size: 14px; text-decoration: none; }
+    .social-icons { display: flex; gap: 10px; margin-top: 10px; }
+    .social-icons a {
+      background: white; color: #0077b6; width: 30px; height: 30px; display: flex;
+      justify-content: center; align-items: center; border-radius: 50%;
+      text-decoration: none; font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <a href="index.html">🏠 Home</a>
+    <a href="jobs.html">💼 Jobs</a>
+    <a href="rentals.html">🏠 Rentals</a>
+    <a href="add-job.html">➕ Add Job</a>
+    <a href="add-rental.html">➕ Add Rental</a>
+    <a href="login.html">👤 Login</a>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+  </div>
+
+  <div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="nav-left">
+      <div class="menu-icon" onclick="toggleMenu()">☰</div>
+      <div class="logo" onclick="window.location.href='index.html'">Apna<span>Bridge</span></div>
+    </div>
+    <div class="nav-right">
+      <button class="list-btn" onclick="window.location.href='add-job.html'">List Your Job</button>
+      <button class="list-btn" onclick="window.location.href='add-rental.html'">List Your Rental</button>
+      <div class="profile-icon" onclick="window.location.href='login.html'">👤</div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Find Jobs & Rentals Near You</h1>
+      <p>Discover the best opportunities and homes with ApnaBridge</p>
+
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search for Jobs or Rentals...">
+        <select id="locationSelect">
+          <option value="">Select Location</option>
+          <option>Hyderabad</option>
+          <option>Bangalore</option>
+          <option>Chennai</option>
+          <option>Pune</option>
+          <option>Delhi</option>
+        </select>
+        <button onclick="performSearch()">Search</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section class="services">
+    <div class="service-card">
+      <img src="https://images.unsplash.com/photo-1521791055366-0d553872125f?auto=format&fit=crop&w=800&q=80" alt="Jobs">
+      <h3>Jobs</h3>
+      <p>Search and apply for jobs across multiple sectors and locations.</p>
+      <button class="list-btn" onclick="window.location.href='jobs.html'">View Jobs</button>
+    </div>
+    <div class="service-card">
+      <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" alt="Rentals">
+      <h3>Rentals</h3>
+      <p>Find apartments, houses, and rooms for rent in your city.</p>
+      <button class="list-btn" onclick="window.location.href='rentals.html'">View Rentals</button>
+    </div>
+  </section>
+
+  <!-- Trending Section -->
+  <section class="trending-section">
+    <h2>🔥 Trending Listings</h2>
+    <div class="trending-columns">
+      <div class="column" id="trendingJobs">
+        <h3>🏢 Trending Jobs</h3>
+        <div id="jobContainer" class="listing-container">
+          <!-- dynamic job cards go here -->
+        </div>
+      </div>
+      <div class="column" id="trendingRentals">
+        <h3>🏠 Trending Rentals</h3>
+        <div id="rentalContainer" class="listing-container">
+          <!-- dynamic rental cards go here -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>
+      <h3>About ApnaBridge</h3>
+      <p>Your trusted platform to find verified jobs and rental listings easily.</p>
+      <div class="social-icons">
+        <a href="#">F</a><a href="#">I</a><a href="#">Y</a><a href="#">X</a><a href="#">L</a>
+      </div>
+    </div>
+    <div>
+      <h3>Corporate</h3>
+      <a href="#">About Us</a><br>
+      <a href="#">Contact</a><br>
+      <a href="#">Terms & Conditions</a><br>
+      <a href="#">Privacy Policy</a>
+    </div>
+    <div>
+      <h3>Quick Links</h3>
+      <a href="jobs.html">Jobs</a><br>
+      <a href="rentals.html">Rentals</a><br>
+      <a href="add-job.html">Add Job</a><br>
+      <a href="add-rental.html">Add Rental</a>
+    </div>
+  </footer>
+
+  <p style="text-align:center; padding:10px; background:#0077b6; color:white;">© 2025 ApnaBridge | Designed by Ganeshsai</p>
+
+  <script>
+    function toggleMenu(){document.getElementById("sidebar").classList.toggle("active");document.getElementById("overlay").classList.toggle("active");}
+    function closeMenu(){document.getElementById("sidebar").classList.remove("active");document.getElementById("overlay").classList.remove("active");}
+    function performSearch(){
+      const query=document.querySelector("#searchInput").value.trim().toLowerCase();
+      const location=document.querySelector("#locationSelect").value;
+      if(!query){alert("Please enter something to search!");return;}
+      const jobKeywords=["developer","designer","manager","engineer","job","internship","teacher"];
+      const rentalKeywords=["flat","room","house","pg","apartment","rental","1bhk","2bhk","3bhk"];
+      let targetPage="jobs.html";
+      if(rentalKeywords.some(word=>query.includes(word))) targetPage="rentals.html";
+      else if(!jobKeywords.some(word=>query.includes(word))){
+        const choice=confirm("Is this related to rentals? Click OK for Rentals or Cancel for Jobs.");
+        targetPage=choice?"rentals.html":"jobs.html";
+      }
+      window.location.href=`${targetPage}?query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}`;
+    }
+    function logout(){alert("You have been logged out!");window.location.href="index.html";}
+
+    // Load Trending Listings (fetches from backend /trending)
+    async function loadTrending(){
+      const jobContainer=document.getElementById("jobContainer");
+      const rentalContainer=document.getElementById("rentalContainer");
+
+      // show loading placeholders
+      jobContainer.innerHTML = '<p style="padding:12px">Loading...</p>';
+      rentalContainer.innerHTML = '<p style="padding:12px">Loading...</p>';
+
+      try {
+        const res = await fetch("http://127.0.0.1:5000/trending");
+        if (!res.ok) throw new Error("Failed to fetch trending from backend");
+        const data = await res.json();
+
+        // data expected as array with {id, title, description, type}
+        const jobs = Array.isArray(data) ? data.filter(i => i.type === "job") : [];
+        const rentals = Array.isArray(data) ? data.filter(i => i.type === "rental") : [];
+
+        if (jobs.length === 0) {
+          jobContainer.innerHTML = '<p>No trending jobs yet 😕</p>';
+        } else {
+          jobContainer.innerHTML = jobs.map(j => {
+            const shortDesc = j.description ? (j.description.length > 120 ? j.description.substring(0,120) + "..." : j.description) : "";
+            return `<a class="listing-link" href="job_details.html?id=${encodeURIComponent(j.id)}">
+                      <div class="listing-card">
+                        <h4>${escapeHtml(j.title)}</h4>
+                        <p>${escapeHtml(shortDesc)}</p>
+                      </div>
+                    </a>`;
+          }).join("");
+        }
+
+        if (rentals.length === 0) {
+          rentalContainer.innerHTML = '<p>No trending rentals yet 😕</p>';
+        } else {
+          rentalContainer.innerHTML = rentals.map(r => {
+            const shortDesc = r.description ? (r.description.length > 120 ? r.description.substring(0,120) + "..." : r.description) : "";
+            return `<a class="listing-link" href="rental_details.html?id=${encodeURIComponent(r.id)}">
+                      <div class="listing-card">
+                        <h4>${escapeHtml(r.title)}</h4>
+                        <p>${escapeHtml(shortDesc)}</p>
+                      </div>
+                    </a>`;
+          }).join("");
+        }
+
+      } catch (err) {
+        console.error(err);
+        jobContainer.innerHTML = "<p>Error loading jobs ⚠️</p>";
+        rentalContainer.innerHTML = "<p>Error loading rentals ⚠️</p>";
+      }
+    }
+
+    // small helper to avoid injecting raw HTML from server fields
+    function escapeHtml(str){
+      if(!str) return "";
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    // initial load
+    document.addEventListener("DOMContentLoaded", loadTrending);
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
