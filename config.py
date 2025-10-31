@@ -1,19 +1,13 @@
-import pymysql
+import os
 
-def init_db():
-    try:
-        connection = pymysql.connect(
-            host="localhost",       # change if needed
-            user="root",            # your MySQL username
-            password="Parlapalli@56",            # your MySQL password
-            database="apnabridge",  # your database name
-            cursorclass=pymysql.cursors.DictCursor
-        )
-        print("✅ Database connected successfully!")
-        return connection
-    except Exception as e:
-        print(f"❌ Database connection failed: {e}")
-        return None
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    DB = {"url": DATABASE_URL}
+else:
+    DB_PATH = os.path.join(BASE_DIR, "apnabridge.sqlite3")
+    DB = {"sqlite_path": DB_PATH}
 
 
 
