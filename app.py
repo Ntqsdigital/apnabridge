@@ -1,263 +1,148 @@
-from flask import Flask, request, jsonify, render_template
+# app.py (simplified, SQLite fallback)
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import mysql.connector
 import hashlib
+import sqlite3
 import os
+from config import DB
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="../frontend", static_url_path="/")
 CORS(app)
 
-# --- DATABASE CONFIGURATION ---
-db_config = {
-    "host": "localhost",
-    "user": "root",
-    "password": "Parlapalli@56",   # <-- your MySQL root password
-    "database": "apnabridge"
-}
-
-
-def get_db_connection():
-    """Create and return a database connection."""
-    try:
-        conn = mysql.connector.connect(**db_config)
-        return conn
-    except mysql.connector.Error as err:
-        print("🔥 Database connection error:", err)
+def get_sqlite_conn():
+    path = DB.get("sqlite_path")
+    if not path:
         return None
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    return conn
 
+# Initialize DB if sqlite
+def init_db():
+    if DB.get("sqlite_path"):
+        conn = get_sqlite_conn()
+        with open(os.path.join(os.path.dirname(__file__), "schema.sql"), "r", encoding="utf-8") as f:
+            conn.executescript(f.read())
+        conn.commit()
+        conn.close()
 
-# ---------------- HOME ----------------
 @app.route("/")
-def home():
-    return jsonify({"message": "ApnaBridge Backend Connected ✅"})
+def root():
+    # optional: serve frontend index
+    return send_from_directory(app.static_folder, "index.html")
 
-
-# ---------------- REGISTER ----------------
+# Example: register
 @app.route("/register", methods=["POST"])
 def register():
+    data = request.get_json()
+    name = data.get("name")
+    email = data.get("email")
+    phone = data.get("phone")
+    role = data.get("role")
+    password = hashlib.sha256(data.get("password", "").encode()).hexdigest()
+
+    conn = get_sqlite_conn()
+    if conn is None:
+        return jsonify({"message":"DB not configured"}), 500
+    cur = conn.cursor()
     try:
-        data = request.get_json()
-        name = data.get("name")
-        email = data.get("email")
-        phone = data.get("phone")
-        role = data.get("role")
-        password = hashlib.sha256(data.get("password", "").encode()).hexdigest()
-
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"message": "Database connection failed"}), 500
-
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO users (name, email, phone, role, password) VALUES (%s, %s, %s, %s, %s)",
-            (name, email, phone, role, password)
-        )
+        cur.execute("INSERT INTO users (name,email,phone,role,password) VALUES (?, ?, ?, ?, ?)",
+                    (name,email,phone,role,password))
         conn.commit()
-        cursor.close()
+        return jsonify({"message":"Registration successful ✅"}), 200
+    except sqlite3.IntegrityError:
+        return jsonify({"message":"Email already registered ⚠️"}), 400
+    finally:
         conn.close()
-        return jsonify({"message": "Registration successful ✅"}), 200
-    except mysql.connector.IntegrityError:
-        return jsonify({"message": "Email already registered ⚠️"}), 400
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
 
-
-# ---------------- LOGIN ----------------
+# Login
 @app.route("/login", methods=["POST"])
 def login():
-    try:
-        data = request.get_json()
-        email = data.get("email")
-        password = hashlib.sha256(data.get("password", "").encode()).hexdigest()
+    data = request.get_json()
+    email = data.get("email")
+    password = hashlib.sha256(data.get("password","").encode()).hexdigest()
+    conn = get_sqlite_conn()
+    if conn is None:
+        return jsonify({"message":"DB not configured"}), 500
+    cur = conn.cursor()
+    cur.execute("SELECT id,name,email,phone,role FROM users WHERE email=? AND password=?", (email,password))
+    row = cur.fetchone()
+    conn.close()
+    if row:
+        user = dict(row)
+        return jsonify({"message":"Login successful ✅","user": user}), 200
+    return jsonify({"message":"Invalid credentials ❌"}), 401
 
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"message": "Database connection failed"}), 500
-
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE email=%s AND password=%s", (email, password))
-        user = cursor.fetchone()
-        cursor.close()
-        conn.close()
-
-        if user:
-            user.pop('password', None)
-            return jsonify({"message": "Login successful ✅", "user": user}), 200
-        else:
-            return jsonify({"message": "Invalid email or password ❌"}), 401
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
-
-
-# ---------------- ADD JOB ----------------
+# add_job
 @app.route("/add_job", methods=["POST"])
 def add_job():
-    try:
-        data = request.get_json()
-        title = data.get("title")
-        description = data.get("description")
-        company = data.get("company")
-        location = data.get("location")
+    data = request.get_json()
+    title = data.get("title")
+    description = data.get("description")
+    company = data.get("company")
+    location = data.get("location")
+    conn = get_sqlite_conn()
+    cur = conn.cursor()
+    cur.execute("INSERT INTO jobs (title,description,company,location) VALUES (?,?,?,?)",
+                (title,description,company,location))
+    conn.commit()
+    conn.close()
+    return jsonify({"message":"Job added successfully ✅"}), 200
 
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"message": "Database connection failed"}), 500
-
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO jobs (title, description, company, location) VALUES (%s, %s, %s, %s)",
-            (title, description, company, location)
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({"message": "Job added successfully ✅"}), 200
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
-
-
-# ---------------- ADD RENTAL ----------------
-@app.route("/add_rental", methods=["POST"])
-def add_rental():
-    try:
-        data = request.get_json()
-        title = data.get("title")
-        description = data.get("description")
-        price = data.get("price")
-        location = data.get("location")
-
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"message": "Database connection failed"}), 500
-
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO rentals (title, description, price, location) VALUES (%s, %s, %s, %s)",
-            (title, description, price, location)
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({"message": "Rental added successfully ✅"}), 200
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
-
-
-# ---------------- GET ALL JOBS ----------------
+# job list
 @app.route("/jobs", methods=["GET"])
 def get_jobs():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM jobs ORDER BY created_at DESC")
-        jobs = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return jsonify(jobs), 200
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+    conn = get_sqlite_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM jobs ORDER BY created_at DESC")
+    rows = cur.fetchall()
+    conn.close()
+    jobs = [dict(r) for r in rows]
+    return jsonify(jobs), 200
 
-
-# ---------------- GET SINGLE JOB DETAILS ----------------
+# single job
 @app.route("/jobs/<int:id>", methods=["GET"])
 def get_job_details(id):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM jobs WHERE id=%s", (id,))
-        job = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        if job:
-            return jsonify(job), 200
-        return jsonify({"message": "Job not found"}), 404
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+    conn = get_sqlite_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM jobs WHERE id=?", (id,))
+    row = cur.fetchone()
+    conn.close()
+    if row:
+        return jsonify(dict(row)), 200
+    return jsonify({"message":"Job not found"}), 404
 
+# rentals endpoints (similar to jobs)...
+@app.route("/add_rental", methods=["POST"])
+def add_rental():
+    data = request.get_json()
+    title = data.get("title"); description = data.get("description")
+    price = data.get("price"); location = data.get("location")
+    conn = get_sqlite_conn(); cur = conn.cursor()
+    cur.execute("INSERT INTO rentals (title,description,price,location) VALUES (?,?,?,?)",
+                (title,description,price,location))
+    conn.commit(); conn.close()
+    return jsonify({"message":"Rental added successfully ✅"}), 200
 
-# ---------------- GET ALL RENTALS ----------------
 @app.route("/rentals", methods=["GET"])
 def get_rentals():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM rentals ORDER BY created_at DESC")
-        rentals = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return jsonify(rentals), 200
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+    conn = get_sqlite_conn(); cur = conn.cursor()
+    cur.execute("SELECT * FROM rentals ORDER BY created_at DESC")
+    rows = cur.fetchall(); conn.close()
+    return jsonify([dict(r) for r in rows]), 200
 
-
-# ---------------- GET SINGLE RENTAL DETAILS ----------------
 @app.route("/rentals/<int:id>", methods=["GET"])
 def get_rental_details(id):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM rentals WHERE id=%s", (id,))
-        rental = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        if rental:
-            return jsonify(rental), 200
-        return jsonify({"message": "Rental not found"}), 404
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+    conn = get_sqlite_conn(); cur = conn.cursor()
+    cur.execute("SELECT * FROM rentals WHERE id=?", (id,))
+    row = cur.fetchone(); conn.close()
+    if row: return jsonify(dict(row)), 200
+    return jsonify({"message":"Rental not found"}), 404
 
-
-# ---------------- TRENDING ----------------
-@app.route("/trending", methods=["GET"])
-def get_trending():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            (SELECT id, title, description, 'job' AS type, created_at FROM jobs ORDER BY created_at DESC LIMIT 3)
-            UNION
-            (SELECT id, title, description, 'rental' AS type, created_at FROM rentals ORDER BY created_at DESC LIMIT 3)
-            ORDER BY created_at DESC
-        """)
-        trending = cursor.fetchall()
-
-        for item in trending:
-            if item['type'] == 'job':
-                item['url'] = f"/job_details?id={item['id']}"
-            else:
-                item['url'] = f"/rental_details?id={item['id']}"
-
-        cursor.close()
-        conn.close()
-        return jsonify(trending), 200
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
-
-
-# ---------------- HTML ROUTES ----------------
-@app.route("/job_details")
-def job_details_page():
-    job_id = request.args.get("id")
-    return render_template("job_details.html", job_id=job_id)
-
-@app.route("/rental_details")
-def rental_details_page():
-    rental_id = request.args.get("id")
-    return render_template("rental_details.html", rental_id=rental_id)
-
-
-# ---------------- MAIN ----------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    init_db()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT",5000)), debug=True)
+
 
 
 
