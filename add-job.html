@@ -9,34 +9,81 @@
     body {
       font-family: 'Poppins', sans-serif;
       background: url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
-      color: #fff; margin: 0;
+      color: #fff; 
+      margin: 0;
     }
+
+    /* Navbar */
     header {
-      background: rgba(0, 119, 182, 0.9);
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 50px;
+      background: rgba(0, 119, 182, 0.95);
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      padding: 0 50px;
+      height: 70px;
     }
-    .logo { font-size: 22px; font-weight: bold; color: #fff; }
-    .logo span { color: #ffdd00; }
+
+    /* Logo with image + text */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .logo img { height: 125px; width: auto; }
+    .logo span { color: #ffdd00; font-weight: bold; font-size: 22px; }
+
+    button {
+      background: #ffdd00; 
+      color: #000; 
+      border: none; 
+      padding: 8px 14px;
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-weight: 600;
+    }
+
     main {
       background: rgba(0,0,0,0.6);
-      margin: 60px auto; width: 85%; border-radius: 10px;
-      padding: 30px; text-align: center;
+      margin: 60px auto; 
+      width: 85%; 
+      border-radius: 10px;
+      padding: 30px; 
+      text-align: center;
     }
-    form { display: flex; flex-direction: column; gap: 15px; max-width: 400px; margin: auto; }
+
+    form {
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px; 
+      max-width: 400px; 
+      margin: auto;
+    }
+
     input, textarea {
-      padding: 10px; border-radius: 6px; border: none;
-      font-family: 'Poppins'; outline: none;
+      padding: 10px; 
+      border-radius: 6px; 
+      border: none;
+      font-family: 'Poppins'; 
+      outline: none;
     }
-    button {
-      background: #ffdd00; border: none; padding: 10px;
-      border-radius: 6px; cursor: pointer; font-weight: 600;
+
+    button[type="submit"] {
+      background: #ffdd00; 
+      border: none; 
+      padding: 10px;
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="logo">Apna<span>Bridge</span></div>
+    <div class="logo" onclick="window.location.href='index.html'">
+      <img src="apnabridge.png" alt="ApnaBridge Logo">
+      <span></span>
+    </div>
     <button onclick="window.location.href='index.html'">🏠 Home</button>
   </header>
 
@@ -75,6 +122,9 @@ async function submitJob(e) {
   }
 }
 </script>
+</body>
+</html>
+
 
 
 
