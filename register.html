@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register | ApnaBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: url('https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+      height: 100vh;
+      display: flex; justify-content: center; align-items: center;
+      position: relative;
+    }
+    body::before {fetch
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+    }
+    .register-container {
+      position: relative;
+      z-index: 2;
+      background: #fff;
+      padding: 40px 50px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      text-align: center;
+      animation: fadeIn 0.8s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .register-container h2 {
+      color: #0077b6;
+      margin-bottom: 20px;
+    }
+    .register-container input, select {
+      width: 100%;
+      padding: 12px 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+    .show-password {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+      margin-top: -5px;
+      color: #333;
+    }
+    .register-btn {
+      background: #ffdd00;
+      color: #000;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 15px;
+      transition: 0.3s;
+    }
+    .register-btn:hover { background: #ffd43b; }
+    .extra-links { margin-top: 15px; font-size: 14px; }
+    .extra-links a {
+      color: #0077b6;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .extra-links a:hover { text-decoration: underline; }
+    #regMsg { margin-top: 10px; font-size: 14px; font-weight: 600; }
+    @media (max-width: 480px) {
+      .register-container { padding: 30px 25px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <h2>📝 Register on ApnaBridge</h2>
+    <form id="registerForm">
+      <input type="text" id="name" placeholder="Full Name" required>
+      <input type="email" id="email" placeholder="Email Address" required>
+      <input type="tel" id="phone" placeholder="Phone Number" required>
+      <select id="role" required>
+        <option value="">Select Role</option>
+        <option value="jobseeker">Job Seeker</option>
+        <option value="employer">Employer</option>
+        <option value="owner">Property Owner</option>
+        <option value="tenant">Tenant</option>
+      </select>
+      <input type="password" id="password" placeholder="Password" required>
+      <div class="show-password">
+        <input type="checkbox" id="showPass" onclick="togglePassword()"> 
+        <label for="showPass">Show Password</label>
+      </div>
+      <button type="submit" class="register-btn">Register</button>
+    </form>
+
+    <p id="regMsg"></p>
+
+    <div class="extra-links">
+      <p>Already have an account? <a href="login.html">Login</a></p>
+      <p><a href="index.html">← Back to Home</a></p>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword() {
+      const passField = document.getElementById("password");
+      passField.type = passField.type === "password" ? "text" : "password";
+    }
+
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const role = document.getElementById("role").value;
+      const password = document.getElementById("password").value;
+
+      try {
+        const res = await fetch("http://127.0.0.1:5000/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, phone, role, password })
+        });
+
+        const data = await res.json();
+        document.getElementById("regMsg").innerText = data.message || "No response message";
+
+        if (res.ok) {
+          document.getElementById("regMsg").style.color = "green";
+          setTimeout(() => window.location.href = "login.html", 1000);
+        } else {
+          document.getElementById("regMsg").style.color = "red";
+        }
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById("regMsg").innerText = "⚠️ Network error — check backend connection";
+        document.getElementById("regMsg").style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>
+
