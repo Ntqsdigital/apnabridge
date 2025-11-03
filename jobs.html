@@ -12,15 +12,27 @@
       color: #fff;
       margin: 0;
     }
+
+    /* Navbar */
     header {
-      background: rgba(0, 119, 182, 0.9);
+      background: rgba(0, 119, 182, 0.95);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 50px;
+      padding: 0 50px;
+      height: 70px; /* fixed navbar height */
     }
-    .logo { font-size: 22px; font-weight: bold; color: #fff; cursor: pointer; }
-    .logo span { color: #ffdd00; }
+
+    /* Logo with image + text */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .logo img { height: 125px; width: auto; }
+    .logo span { color: #ffdd00; font-weight: bold; font-size: 22px; }
+
     .header-buttons { display: flex; gap: 10px; }
     button {
       background: #ffdd00;
@@ -31,6 +43,7 @@
       cursor: pointer;
       font-weight: 600;
     }
+
     main {
       background: rgba(0,0,0,0.6);
       margin: 60px auto;
@@ -39,6 +52,7 @@
       padding: 30px;
       text-align: center;
     }
+
     .job-card {
       background: #fff;
       color: #333;
@@ -46,7 +60,11 @@
       border-radius: 8px;
       margin: 15px 0;
       box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform 0.2s;
     }
+    .job-card:hover { transform: translateY(-3px); }
+
     /* 🔥 Trending Section Styles */
     .trending {
       background: rgba(0,0,0,0.7);
@@ -80,7 +98,10 @@
 </head>
 <body>
   <header>
-    <div class="logo" onclick="window.location.href='index.html'">Apna<span>Bridge</span></div>
+    <div class="logo" onclick="window.location.href='index.html'">
+      <img src="apnabridge.png" alt="ApnaBridge Logo">
+      <span></span>
+    </div>
     <div class="header-buttons">
       <button onclick="window.location.href='index.html'">🏠 Home</button>
       <button onclick="window.location.href='add-job.html'">+ Add Job</button>
@@ -99,30 +120,32 @@
   </main>
 
   <script>
-  async function fetchJobs() {
-    const res = await fetch("http://127.0.0.1:5000/jobs");
-    const jobs = await res.json();
-    const container = document.getElementById("jobsContainer");
-    container.innerHTML = "";
+    async function fetchJobs() {
+      const res = await fetch("http://127.0.0.1:5000/jobs");
+      const jobs = await res.json();
+      const container = document.getElementById("jobsContainer");
+      container.innerHTML = "";
 
-    jobs.forEach(job => {
-      container.innerHTML += `
-        <div class="job-card" onclick="viewJob(${job.id})" style="cursor:pointer;">
-          <h3>${job.title}</h3>
-          <p><strong>${job.company}</strong> | ${job.location}</p>
-          <p>${job.description}</p>
-        </div>
-      `;
-    });
-  }
+      jobs.forEach(job => {
+        container.innerHTML += `
+          <div class="job-card" onclick="viewJob(${job.id})">
+            <h3>${job.title}</h3>
+            <p><strong>${job.company}</strong> | ${job.location}</p>
+            <p>${job.description}</p>
+          </div>
+        `;
+      });
+    }
 
-  function viewJob(id) {
-    // go to job details page with id
-    window.location.href = `/job_details?id=${id}`;
-  }
+    function viewJob(id) {
+      window.location.href = `/job_details?id=${id}`;
+    }
 
-  fetchJobs();
-</script>
+    fetchJobs();
+  </script>
+</body>
+</html>
+
 
 
 
