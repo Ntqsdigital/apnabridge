@@ -9,18 +9,26 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: "Poppins", sans-serif; background: #f7f8fa; color: #333; overflow-x: hidden; }
 
+    /* Navbar */
     .navbar {
       background: #0077b6;
       display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 50px;
+      padding: 0 50px;
+      height: 70px; /* fixed navbar height */
       color: #fff;
       position: sticky; top: 0; z-index: 1000;
     }
-    .nav-left { display: flex; align-items: center; gap: 10px; }
+    .nav-left { display: flex; align-items: center; gap: 15px; }
     .menu-icon { font-size: 24px; cursor: pointer; transition: 0.3s; }
     .menu-icon:hover { transform: scale(1.1); }
-    .logo { font-size: 22px; font-weight: bold; cursor: pointer; }
-    .logo span { color: #ffdd00; }
+
+    /* Logo with image + text */
+    .logo {
+      display: flex; align-items: center; gap: 8px; cursor: pointer;
+    }
+    .logo img { height: 125px; width: auto; } /* bigger logo */
+    .logo span { color: #ffdd00; font-weight: bold; font-size: 22px; }
+
     .nav-right { display: flex; align-items: center; gap: 10px; }
     .list-btn {
       background: #ffdd00; color: #000; border: none;
@@ -179,7 +187,10 @@
   <header class="navbar">
     <div class="nav-left">
       <div class="menu-icon" onclick="toggleMenu()">☰</div>
-      <div class="logo" onclick="window.location.href='index.html'">Apna<span>Bridge</span></div>
+      <div class="logo" onclick="window.location.href='index.html'">
+        <img src="apnabridge.png" alt="ApnaBridge Logo">
+        <span></span>
+      </div>
     </div>
     <div class="nav-right">
       <button class="list-btn" onclick="window.location.href='add-job.html'">List Your Job</button>
@@ -244,6 +255,7 @@
     </div>
   </section>
 
+  <!-- Footer -->
   <footer>
     <div>
       <h3>About ApnaBridge</h3>
@@ -289,52 +301,19 @@
     }
     function logout(){alert("You have been logged out!");window.location.href="index.html";}
 
-    // Load Trending Listings (fetches from backend /trending)
     async function loadTrending(){
       const jobContainer=document.getElementById("jobContainer");
       const rentalContainer=document.getElementById("rentalContainer");
-
-      // show loading placeholders
       jobContainer.innerHTML = '<p style="padding:12px">Loading...</p>';
       rentalContainer.innerHTML = '<p style="padding:12px">Loading...</p>';
-
       try {
         const res = await fetch("http://127.0.0.1:5000/trending");
         if (!res.ok) throw new Error("Failed to fetch trending from backend");
         const data = await res.json();
-
-        // data expected as array with {id, title, description, type}
         const jobs = Array.isArray(data) ? data.filter(i => i.type === "job") : [];
         const rentals = Array.isArray(data) ? data.filter(i => i.type === "rental") : [];
-
-        if (jobs.length === 0) {
-          jobContainer.innerHTML = '<p>No trending jobs yet 😕</p>';
-        } else {
-          jobContainer.innerHTML = jobs.map(j => {
-            const shortDesc = j.description ? (j.description.length > 120 ? j.description.substring(0,120) + "..." : j.description) : "";
-            return `<a class="listing-link" href="job_details.html?id=${encodeURIComponent(j.id)}">
-                      <div class="listing-card">
-                        <h4>${escapeHtml(j.title)}</h4>
-                        <p>${escapeHtml(shortDesc)}</p>
-                      </div>
-                    </a>`;
-          }).join("");
-        }
-
-        if (rentals.length === 0) {
-          rentalContainer.innerHTML = '<p>No trending rentals yet 😕</p>';
-        } else {
-          rentalContainer.innerHTML = rentals.map(r => {
-            const shortDesc = r.description ? (r.description.length > 120 ? r.description.substring(0,120) + "..." : r.description) : "";
-            return `<a class="listing-link" href="rental_details.html?id=${encodeURIComponent(r.id)}">
-                      <div class="listing-card">
-                        <h4>${escapeHtml(r.title)}</h4>
-                        <p>${escapeHtml(shortDesc)}</p>
-                      </div>
-                    </a>`;
-          }).join("");
-        }
-
+        jobContainer.innerHTML = jobs.length ? jobs.map(j => `<a class="listing-link" href="job_details.html?id=${encodeURIComponent(j.id)}"><div class="listing-card"><h4>${escapeHtml(j.title)}</h4><p>${escapeHtml(j.description?.substring(0,120) || "")}</p></div></a>`).join("") : '<p>No trending jobs yet 😕</p>';
+        rentalContainer.innerHTML = rentals.length ? rentals.map(r => `<a class="listing-link" href="rental_details.html?id=${encodeURIComponent(r.id)}"><div class="listing-card"><h4>${escapeHtml(r.title)}</h4><p>${escapeHtml(r.description?.substring(0,120) || "")}</p></div></a>`).join("") : '<p>No trending rentals yet 😕</p>';
       } catch (err) {
         console.error(err);
         jobContainer.innerHTML = "<p>Error loading jobs ⚠️</p>";
@@ -342,20 +321,10 @@
       }
     }
 
-    // small helper to avoid injecting raw HTML from server fields
-    function escapeHtml(str){
-      if(!str) return "";
-      return String(str)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    // initial load
+    function escapeHtml(str){return str?String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"):"";}
     document.addEventListener("DOMContentLoaded", loadTrending);
   </script>
+
 </body>
 </html>
 
