@@ -45,8 +45,8 @@
         if (!res.ok) throw new Error("Rental not found");
         const rental = await res.json();
         document.getElementById("title").innerText = rental.title || "—";
-        document.getElementById("Email").innerText = "Email: " + (rental.Email || "—");
-        document.getElementById("Mobile").innerText = "Mobile: " + (rental.Mobile || "—");
+        document.getElementById("Email").innerText = "Email: " + (rental.email || "—");
+        document.getElementById("Mobile").innerText = "Mobile: " + (rental.mobile || "—");
         document.getElementById("location").innerText = "Location: " + (rental.location || "—");
         document.getElementById("price").innerText = "Price: ₹" + (rental.price || "—");
         document.getElementById("description").innerText = rental.description || "No description provided.";
@@ -62,4 +62,6 @@
   </script>
 </body>
 </html>
+
+
 
