@@ -16,25 +16,45 @@
   <div class="container">
     <h2 id="title"></h2>
     <p id="company"></p>
+    <p id="email"></p>
+    <p id="mobile"></p>
+    <p id="salary"></p>
     <p id="location"></p>
     <p id="description"></p>
     <button onclick="window.history.back()">⬅ Back</button>
   </div>
 
   <script>
-    async function loadJobDetails() {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get("id");
-      const res = await fetch(`http://127.0.0.1:5000/jobs/${id}`);
-      const job = await res.json();
-
-      document.getElementById("title").innerText = job.title;
-      document.getElementById("company").innerText = "Company: " + job.company;
-      document.getElementById("location").innerText = "Location: " + job.location;
-      document.getElementById("description").innerText = job.description;
+  async function loadJobDetails() {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    if (!id) {
+      document.querySelector(".container").innerHTML = "<p style='color:#d00'>No job ID provided in the URL.</p><button onclick='window.history.back()'>⬅ Back</button>";
+      return;
     }
 
-    loadJobDetails();
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/jobs/${encodeURIComponent(id)}`);
+      if (!res.ok) throw new Error("Job not found");
+      const job = await res.json();
+
+      document.getElementById("title").innerText = job.title || "—";
+      document.getElementById("company").innerText = "Company: " + (job.company || "—");
+      document.getElementById("email").innerText = "Email: " + (job.email || "—");
+      document.getElementById("mobile").innerText = "Mobile: " + (job.mobile || "—");
+      document.getElementById("salary").innerText = "Salary: " + (job.salary || "—");
+      document.getElementById("location").innerText = "Location: " + (job.location || "—");
+      document.getElementById("description").innerText = job.description || "No description provided.";
+    } catch (err) {
+      console.error(err);
+      document.querySelector(".container").innerHTML = `<p style="color:#d00">Failed to load job details. ${escapeHtml(err.message || "")}</p><button onclick="window.history.back()">⬅ Back</button>`;
+    }
+  }
+
+  function escapeHtml(str){return str?String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"):"";}
+
+  loadJobDetails();
   </script>
 </body>
 </html>
+
