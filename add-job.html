@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Job | ApnaBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      color: #fff; 
+      margin: 0;
+    }
+
+    header {
+      background: rgba(0, 119, 182, 0.95);
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      padding: 0 50px;
+      height: 70px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .logo img { height: 125px; width: auto; margin-top: 5px; }
+    .logo span { color: #ffdd00; font-weight: bold; font-size: 22px; }
+
+    button {
+      background: #ffdd00; 
+      color: #000; 
+      border: none; 
+      padding: 8px 14px;
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #ffe94f;
+    }
+
+    main {
+      background: rgba(0,0,0,0.6);
+      margin: 60px auto; 
+      width: 85%; 
+      border-radius: 10px;
+      padding: 30px; 
+      text-align: center;
+    }
+
+    form {
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px; 
+      max-width: 400px; 
+      margin: auto;
+    }
+
+    input, textarea {
+      padding: 10px; 
+      border-radius: 6px; 
+      border: none;
+      font-family: 'Poppins'; 
+      outline: none;
+    }
+
+    .form-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .reset-btn {
+      background: #f44336;
+      color: #fff;
+    }
+    .reset-btn:hover {
+      background: #ff6659;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo" onclick="window.location.href='index.html'">
+      <img src="apnabridge.png" alt="ApnaBridge Logo">
+      <span></span>
+    </div>
+    <button onclick="window.location.href='index.html'">🏠 Home</button>
+  </header>
+
+  <main>
+    <h2>Add a Job Listing</h2>
+    <form onsubmit="submitJob(event)">
+      <input type="text" id="title" placeholder="Job Title" required>
+      <input type="text" id="company" placeholder="Company Name" required>
+      <input type="text" id="email" placeholder="Email" required>
+      <input type="text" id="mobile" placeholder="Mobile" required>
+      <input type="text" id="salary" placeholder="Salary" required>
+      <input type="text" id="location" placeholder="Location" required>
+      <textarea id="description" placeholder="Job Description" rows="4"></textarea>
+
+      <div class="form-buttons">
+        <button type="submit">Submit Job</button>
+        <button type="reset" class="reset-btn">Reset</button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+async function submitJob(e) {
+  e.preventDefault();
+  const payload = {
+    title: document.getElementById("title").value,
+    company: document.getElementById("company").value,
+    email: document.getElementById("email").value,
+    mobile: document.getElementById("mobile").value,
+    salary: document.getElementById("salary").value,
+    location: document.getElementById("location").value,
+    description: document.getElementById("description").value
+  };
+  try {
+    const res = await fetch("http://127.0.0.1:5000/add_job", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    alert(data.message || "Job added!");
+    if (res.ok) window.location.href = "jobs.html";
+  } catch (err) {
+    console.error(err);
+    alert("Network error — please check backend.");
+  }
+}
+</script>
+</body>
+</html>
+
+
+
+
+
+
