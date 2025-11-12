@@ -21,8 +21,7 @@ oauth = OAuth(app)
 google = oauth.register(
     name='google',
     client_id='183402241443-mno35b8tj1gj92rjo7t56lcae69tjj4m.apps.googleusercontent.com',
-    client_secret='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',  # replace this
-    # Let Authlib auto-discover endpoints (this provides jwks_uri too)
+    client_secret='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',
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     access_token_url='https://accounts.google.com/o/oauth2/token',
     access_token_params=None,
@@ -50,7 +49,7 @@ def get_db_connection():
 
 # ---------------- EMAIL SETTINGS ----------------
 SENDER_EMAIL = "ganeshsai@nuevostech.com"
-SENDER_PASSWORD = "myrvnqpycpouccwb"  # App Password
+SENDER_PASSWORD = "myrvnqpycpouccwb"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 
@@ -239,13 +238,12 @@ def verify_register_otp():
         print("🔥 VERIFY REGISTER OTP ERROR:", e)
         return jsonify({"message": "Server error"}), 500
 
-# ---- GOOGLE LOGIN (REDIRECT + CALLBACK) ----
+# ---- GOOGLE LOGIN ----
 @app.route("/login/google")
 def login_google():
     redirect_uri = url_for("authorize_google", _external=True)
     return google.authorize_redirect(redirect_uri)
 
-# --- ALIAS ROUTE: keep your frontend's /google_login working ---
 @app.route("/google_login")
 def google_login_alias():
     return redirect(url_for("login_google", _external=True))
@@ -253,8 +251,6 @@ def google_login_alias():
 @app.route("/callback")
 def authorize_google():
     token = google.authorize_access_token()
-
-    # ✅ FIX for InvalidClaimError: allow both valid issuers
     user_info = google.parse_id_token(
         token,
         claims_options={
@@ -280,7 +276,7 @@ def authorize_google():
     conn.close()
 
     session["user_email"] = email
-    return redirect("http://127.0.0.1:5500/index.html")  # ✅ frontend redirect to home after Google login
+    return redirect("http://127.0.0.1:5500/index.html")
 
 # ---- RESET PASSWORD ----
 @app.route("/send_reset_otp", methods=["POST"])
@@ -330,20 +326,28 @@ def reset_password_confirm():
     otp_store.pop(email, None)
     return jsonify({"message": "✅ Password reset successfully"}), 200
 
-# ---- JOBS ----
+# ---- ✅ FIXED ADD JOB ----
 @app.route("/add_job", methods=["POST"])
 def add_job():
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         title = data.get("title")
-        description = data.get("description")
         company = data.get("company")
+        email = data.get("email")
+        mobile = data.get("mobile")
         location = data.get("location")
+        salary = data.get("salary")
+        description = data.get("description")
+
+        if not title or not company:
+            return jsonify({"message": "Title and company required"}), 400
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO jobs (title, description, company, location, created_at) VALUES (%s, %s, %s, %s, %s)",
-                       (title, description, company, location, now_utc()))
+        cursor.execute("""
+            INSERT INTO jobs (title, company, email, mobile, location, salary, description, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (title, company, email, mobile, location, salary, description, now_utc()))
         conn.commit()
         cursor.close()
         conn.close()
@@ -352,19 +356,27 @@ def add_job():
         print("🔥 ADD JOB ERROR:", e)
         return jsonify({"message": "Server error"}), 500
 
+# ---- ✅ FIXED ADD RENTAL ----
 @app.route("/add_rental", methods=["POST"])
 def add_rental():
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         title = data.get("title")
-        description = data.get("description")
-        price = data.get("price")
+        email = data.get("email")
+        mobile = data.get("mobile")
         location = data.get("location")
+        price = data.get("price")
+        description = data.get("description")
+       
+        if not title or not location:
+            return jsonify({"message": "Title and location required"}), 400
 
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO rentals (title, description, price, location, created_at) VALUES (%s, %s, %s, %s, %s)",
-                       (title, description, price, location, now_utc()))
+        cursor.execute("""
+            INSERT INTO rentals (title, email, mobile, location, price, description, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (title, email, mobile, location, price, description, now_utc()))
         conn.commit()
         cursor.close()
         conn.close()
@@ -401,35 +413,21 @@ def get_rentals():
         print("🔥 GET RENTALS ERROR:", e)
         return jsonify({"message": "Server error"}), 500
 
-# ------------------ ADDED: single-item endpoints ------------------
-# (these routes are added so frontend fetch("/jobs/<id>") and fetch("/rentals/<id>") succeed)
-
-@app.route("/jobs/<int:job_id>", methods=["GET"])
-def get_job(job_id):
-    try:
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"message": "Database connection failed"}), 500
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM jobs WHERE id = %s", (job_id,))
-        job = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        if not job:
-            return jsonify({"message": "Job not found"}), 404
-        return jsonify(job), 200
-    except Exception as e:
-        print("🔥 GET JOB ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
-
+# ---- ✅ FIXED RENTAL DETAIL ----
 @app.route("/rentals/<int:rental_id>", methods=["GET"])
 def get_rental(rental_id):
     try:
         conn = get_db_connection()
-        if not conn:
-            return jsonify({"message": "Database connection failed"}), 500
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM rentals WHERE id = %s", (rental_id,))
+        cursor.execute("""
+            SELECT id, title, description, location,
+                   COALESCE(email, '') AS email,
+                   COALESCE(mobile, '') AS mobile,
+                   COALESCE(price, '') AS price,
+                   created_at
+            FROM rentals
+            WHERE id = %s
+        """, (rental_id,))
         rental = cursor.fetchone()
         cursor.close()
         conn.close()
@@ -440,8 +438,31 @@ def get_rental(rental_id):
         print("🔥 GET RENTAL ERROR:", e)
         return jsonify({"message": "Server error"}), 500
 
-# -------------------------------------------------------------------
+@app.route("/jobs/<int:job_id>", methods=["GET"])
+def get_job(job_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT id, title, description, company, location,
+                   COALESCE(email, '') AS email,
+                   COALESCE(mobile, '') AS mobile,
+                   COALESCE(salary, '') AS salary,
+                   created_at
+            FROM jobs
+            WHERE id = %s
+        """, (job_id,))
+        job = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if not job:
+            return jsonify({"message": "Job not found"}), 404
+        return jsonify(job), 200
+    except Exception as e:
+        print("🔥 GET JOB ERROR:", e)
+        return jsonify({"message": "Server error"}), 500
 
+# ---- TRENDING ----
 @app.route("/trending", methods=["GET"])
 def get_trending():
     try:
@@ -466,7 +487,6 @@ def get_trending():
         print("🔥 TRENDING ERROR:", e)
         return jsonify({"message": "Server error"}), 500
 
-# ---- TEMPLATES ----
 @app.route("/job_details")
 def job_details_page():
     job_id = request.args.get("id")
@@ -477,10 +497,8 @@ def rental_details_page():
     rental_id = request.args.get("id")
     return render_template("rental_details.html", rental_id=rental_id)
 
-# ---- RUN APP ----
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
-
 
 
 
