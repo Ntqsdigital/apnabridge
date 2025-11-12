@@ -12,28 +12,33 @@
       color: #fff;
       margin: 0;
     }
-
-    /* Navbar */
     header {
       background: rgba(0, 119, 182, 0.95);
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 0 50px;
-      height: 70px; /* fixed navbar height */
+      height: 70px;
     }
-
-    /* Logo with image + text */
     .logo {
       display: flex;
       align-items: center;
       gap: 8px;
       cursor: pointer;
     }
-    .logo img { height: 125px; width: auto; }
-    .logo span { color: #ffdd00; font-weight: bold; font-size: 22px; }
-
-    .header-buttons { display: flex; gap: 10px; }
+    .logo img {
+      height: 125px;
+      width: auto;
+    }
+    .logo span {
+      color: #ffdd00;
+      font-weight: bold;
+      font-size: 22px;
+    }
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+    }
     button {
       background: #ffdd00;
       color: #000;
@@ -43,7 +48,6 @@
       cursor: pointer;
       font-weight: 600;
     }
-
     main {
       background: rgba(0,0,0,0.6);
       margin: 60px auto;
@@ -52,7 +56,6 @@
       padding: 30px;
       text-align: center;
     }
-
     .rental-card {
       background: #fff;
       color: #333;
@@ -65,7 +68,6 @@
     }
     .rental-card:hover { transform: translateY(-3px); }
 
-    /* 🔥 Trending Section Styles */
     .trending {
       background: rgba(0,0,0,0.7);
       padding: 20px;
@@ -77,23 +79,14 @@
       text-align: center;
       margin-bottom: 10px;
     }
-    .trending ul {
-      list-style: none;
-      padding: 0;
-      text-align: center;
-    }
-    .trending li {
-      margin: 8px 0;
-    }
+    .trending ul { list-style: none; padding: 0; text-align: center; }
+    .trending li { margin: 8px 0; }
     .trending a {
       color: #fff;
       text-decoration: none;
       font-weight: 500;
     }
-    .trending a:hover {
-      color: #ffdd00;
-      text-decoration: underline;
-    }
+    .trending a:hover { color: #ffdd00; text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -104,7 +97,7 @@
     </div>
     <div class="header-buttons">
       <button onclick="window.location.href='index.html'">🏠 Home</button>
-      <button onclick="window.location.href='add-rental.html'">+ Add Rental</button>
+      <button onclick="window.location.href='add_rental.html'">+ Add Rental</button>
     </div>
   </header>
 
@@ -112,36 +105,67 @@
     <h2>Available Rentals</h2>
     <div id="rentalsContainer"></div>
 
-    <!-- 🔥 Trending Section -->
     <section class="trending">
-      <h2>🔥 Trending Listings</h2>
+      <h2>🔥 Trending Rentals</h2>
       <ul id="trendingList"></ul>
     </section>
   </main>
 
   <script>
-  async function fetchRentals() {
-    const res = await fetch("http://127.0.0.1:5000/rentals");
-    const rentals = await res.json();
-    const container = document.getElementById("rentalsContainer");
-    container.innerHTML = "";
+    async function fetchRentals() {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/rentals");
+        if (!res.ok) throw new Error("Failed to load rentals");
+        const rentals = await res.json();
+        const container = document.getElementById("rentalsContainer");
+        container.innerHTML = "";
+        rentals.forEach(rental => {
+          const shortDesc = (rental.description || "").substring(0, 200);
+          container.innerHTML += `
+            <div class="rental-card" onclick="viewRental(${rental.id})" role="button" tabindex="0">
+              <h3>${escapeHtml(rental.title)}</h3>
+              <p>${escapeHtml(rental.location)} | ₹${escapeHtml(String(rental.price || '0'))}</p>
+              <p>${escapeHtml(shortDesc)}${(rental.description && rental.description.length>200) ? '...' : ''}</p>
+            </div>`;
+        });
+      } catch (err) {
+        console.error(err);
+        document.getElementById("rentalsContainer").innerHTML =
+          "<p style='color:#ffd700'>Failed to load rentals. Try again later.</p>";
+      }
+    }
 
-    rentals.forEach(rental => {
-      container.innerHTML += `
-        <div class="rental-card" onclick="viewRental(${rental.id})">
-          <h3>${rental.title}</h3>
-          <p>${rental.location} | ₹${rental.price}</p>
-          <p>${rental.description}</p>
-        </div>
-      `;
+    async function fetchTrending() {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/trending_rentals");
+        if (!res.ok) throw new Error("Failed to load trending rentals");
+        const trending = await res.json();
+        const list = document.getElementById("trendingList");
+        list.innerHTML = trending.length ? trending.map(item => `
+          <li><a href="rental_details.html?id=${encodeURIComponent(item.id)}">${escapeHtml(item.title)} - ₹${escapeHtml(String(item.price || '0'))}</a></li>`
+        ).join("") : "<li>No trending rentals</li>";
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function viewRental(id) {
+      window.location.href = `rental_details.html?id=${encodeURIComponent(id)}`;
+    }
+
+    function escapeHtml(str){
+      return str ? String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;") : "";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchRentals();
+      fetchTrending();
     });
-  }
-
-  function viewRental(id) {
-    window.location.href = `/rental_details?id=${id}`;
-  }
-
-  fetchRentals(); 
   </script>
 </body>
 </html>
