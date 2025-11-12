@@ -1,309 +1,295 @@
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
-import mysql.connector
-import hashlib
-import os
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | ApnaBridge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
-app = Flask(__name__, template_folder="templates")  # Ensure Flask finds your HTML files
-CORS(app)
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-# --- DATABASE CONFIGURATION ---
-db_config = {
-    "host": "localhost",
-    "user": "root",
-    "password": "Parlapalli@56",  # ⚠️ Use .env file in production
-    "database": "apnabridge"
-}
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: url('https://images.unsplash.com/photo-1486308510493-aa64833634ef?auto=format&fit=crop&w=1400&q=80') center/cover no-repeat;
+      height: 100vh;
+      display: flex; justify-content: center; align-items: center;
+      position: relative;
+    }
 
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+    }
 
-def get_db_connection():
-    """Create and return a database connection."""
-    try:
-        conn = mysql.connector.connect(**db_config)
-        return conn
-    except mysql.connector.Error as err:
-        print("🔥 Database connection error:", err)
-        return None
+    .login-container {
+      position: relative;
+      z-index: 2;
+      background: #fff;
+      padding: 40px 50px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      text-align: center;
+      animation: fadeIn 0.8s ease-in;
+    }
 
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-# ---------------- HOME ----------------
-@app.route("/")
-def home():
-    return jsonify({"message": "ApnaBridge Backend Connected ✅"})
+    .login-container h2 {
+      color: #0077b6;
+      margin-bottom: 20px;
+    }
 
+    .login-container input {
+      width: 100%;
+      padding: 12px 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
 
-# ---------------- REGISTER ----------------
-@app.route("/register", methods=["POST"])
-def register():
-    try:
-        data = request.get_json()
-        name = data.get("name")
-        email = data.get("email")
-        phone = data.get("phone")
-        role = data.get("role")
-        password = hashlib.sha256(data.get("password", "").encode()).hexdigest()
+    .show-password {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+      margin-top: -5px;
+      color: #333;
+    }
 
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"message": "Database connection failed"}), 500
+    .login-btn {
+      background: #ffdd00;
+      color: #000;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 15px;
+      transition: 0.3s;
+    }
 
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO users (name, email, phone, role, password) VALUES (%s, %s, %s, %s, %s)",
-            (name, email, phone, role, password)
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({"message": "Registration successful ✅"}), 200
+    .login-btn:hover { background: #ffd43b; }
 
-    except mysql.connector.IntegrityError:
-        return jsonify({"message": "Email already registered ⚠️"}), 400
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+    .google-btn {
+      background: #4285F4;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
 
+    .google-btn:hover { background: #357ae8; }
 
-# ---------------- LOGIN ----------------
-@app.route("/login", methods=["POST"])
-def login():
-    try:
-        data = request.get_json()
-        email = data.get("email")
-        password = hashlib.sha256(data.get("password", "").encode()).hexdigest()
+    .google-btn img {
+      width: 20px;
+      height: 20px;
+    }
 
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"message": "Database connection failed"}), 500
+    .extra-links {
+      margin-top: 15px;
+      font-size: 14px;
+    }
 
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE email=%s AND password=%s", (email, password))
-        user = cursor.fetchone()
-        cursor.close()
-        conn.close()
+    .extra-links a {
+      color: #0077b6;
+      text-decoration: none;
+      font-weight: 600;
+    }
 
-        if user:
-            user.pop('password', None)
-            return jsonify({"message": "Login successful ✅", "user": user}), 200
-        else:
-            return jsonify({"message": "Invalid email or password ❌"}), 401
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+    .extra-links a:hover { text-decoration: underline; }
 
+    #otp-section {
+      display: none;
+      animation: fadeIn 0.6s ease-in;
+    }
 
-# ---------------- RESET PASSWORD ----------------
-@app.route("/reset_password", methods=["POST"])
-def reset_password():
-    try:
-        data = request.get_json()
-        email = data.get("email")
-        new_password = data.get("new_password")
+    #message {
+      margin-top: 10px;
+      color: #0077b6;
+      font-weight: 500;
+    }
 
-        if not email or not new_password:
-            return jsonify({"message": "Email and new password required ⚠️"}), 400
+    #error {
+      margin-top: 10px;
+      color: red;
+      font-weight: 500;
+    }
 
-        hashed_pw = hashlib.sha256(new_password.encode()).hexdigest()
+    @media (max-width: 480px) {
+      .login-container { padding: 30px 25px; }
+    }
+  </style>
+</head>
 
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"message": "Database connection failed"}), 500
+<body>
+  <div class="login-container">
+    <h2>👤 Login to ApnaBridge</h2>
 
-        cursor = conn.cursor()
-        cursor.execute("SELECT id FROM users WHERE email=%s", (email,))
-        user = cursor.fetchone()
+    <!-- Login form -->
+    <div id="login-section">
+      <form id="loginForm">
+        <input type="email" id="email" placeholder="Email Address" required>
+        <input type="password" id="password" placeholder="Password" required>
 
-        if not user:
-            cursor.close()
-            conn.close()
-            return jsonify({"message": "Email not found ❌"}), 404
+        <div class="show-password">
+          <input type="checkbox" id="showPass" onclick="togglePassword()"> 
+          <label for="showPass">Show Password</label>
+        </div>
 
-        cursor.execute("UPDATE users SET password=%s WHERE email=%s", (hashed_pw, email))
-        conn.commit()
-        cursor.close()
-        conn.close()
+        <button type="submit" class="login-btn">Login</button>
+      </form>
 
-        return jsonify({"message": "Password reset successful ✅"}), 200
+      <!-- Only ONE Google Login Button -->
+      <button type="button" class="google-btn" onclick="loginWithGoogle()">
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo">
+        Login with Google
+      </button>
+    </div>
 
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+    <!-- OTP Verification -->
+    <div id="otp-section">
+      <p>Enter the OTP sent to your email</p>
+      <input type="text" id="otp" placeholder="Enter OTP" maxlength="6">
+      <button onclick="verifyOtp()" class="login-btn">Verify OTP</button>
+      <p style="font-size: 14px; margin-top: 8px;">
+        Didn’t get the code? <a href="#" onclick="resendOtp()">Resend</a>
+      </p>
+    </div>
 
+    <div class="extra-links">
+      <p>Forgot your password? <a href="reset_password.html">Reset</a></p>
+      <p>Don’t have an account? <a href="register.html">Register</a></p>
+      <p><a href="index.html">← Back to Home</a></p>
+    </div>
 
-# ---------------- ADD JOB ----------------
-@app.route("/add_job", methods=["POST"])
-def add_job():
-    try:
-        data = request.get_json()
-        title = data.get("title")
-        description = data.get("description")
-        company = data.get("company")
-        location = data.get("location")
+    <p id="message"></p>
+    <p id="error"></p>
+  </div>
 
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"message": "Database connection failed"}), 500
+  <script>
+    let userEmail = "";
 
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO jobs (title, description, company, location) VALUES (%s, %s, %s, %s)",
-            (title, description, company, location)
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({"message": "Job added successfully ✅"}), 200
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+    function togglePassword() {
+      const passField = document.getElementById("password");
+      passField.type = passField.type === "password" ? "text" : "password";
+    }
 
+    // Normal Login
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const messageBox = document.getElementById("message");
+      const errorBox = document.getElementById("error");
+      messageBox.innerText = "";
+      errorBox.innerText = "";
 
-# ---------------- ADD RENTAL ----------------
-@app.route("/add_rental", methods=["POST"])
-def add_rental():
-    try:
-        data = request.get_json()
-        title = data.get("title")
-        description = data.get("description")
-        price = data.get("price")
-        location = data.get("location")
+      try {
+        const res = await fetch("http://127.0.0.1:5000/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
 
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({"message": "Database connection failed"}), 500
+        const data = await res.json();
 
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO rentals (title, description, price, location) VALUES (%s, %s, %s, %s)",
-            (title, description, price, location)
-        )
-        conn.commit()
-        cursor.close()
-        conn.close()
-        return jsonify({"message": "Rental added successfully ✅"}), 200
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+        if (res.ok && data.otp_required) {
+          userEmail = data.email;
+          messageBox.innerText = "📩 OTP sent to your email.";
+          document.getElementById("login-section").style.display = "none";
+          document.getElementById("otp-section").style.display = "block";
+        } else if (res.ok && data.message.includes("successful")) {
+          messageBox.innerText = "✅ Login successful!";
+          sessionStorage.setItem("google_user", JSON.stringify({ email }));
+          setTimeout(() => window.location.href = "login_success.html", 1000);
+        } else {
+          errorBox.innerText = data.message;
+        }
+      } catch (err) {
+        errorBox.innerText = "⚠️ Server error, please try again later.";
+      }
+    });
 
+    // Verify OTP
+    async function verifyOtp() {
+      const otp = document.getElementById("otp").value.trim();
+      const messageBox = document.getElementById("message");
+      const errorBox = document.getElementById("error");
+      messageBox.innerText = "";
+      errorBox.innerText = "";
 
-# ---------------- GET ALL JOBS ----------------
-@app.route("/jobs", methods=["GET"])
-def get_jobs():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM jobs ORDER BY created_at DESC")
-        jobs = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return jsonify(jobs), 200
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+      try {
+        const res = await fetch("http://127.0.0.1:5000/verify_email_otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userEmail, otp })
+        });
 
+        const data = await res.json();
+        if (res.ok) {
+          messageBox.innerText = "✅ OTP verified successfully!";
+          sessionStorage.setItem("google_user", JSON.stringify({ email: userEmail }));
+          setTimeout(() => window.location.href = "login_success.html", 1000);
+        } else {
+          errorBox.innerText = data.message;
+        }
+      } catch (err) {
+        errorBox.innerText = "⚠️ Error verifying OTP.";
+      }
+    }
 
-# ---------------- GET SINGLE JOB DETAILS ----------------
-@app.route("/jobs/<int:id>", methods=["GET"])
-def get_job_details(id):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM jobs WHERE id=%s", (id,))
-        job = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        if job:
-            return jsonify(job), 200
-        return jsonify({"message": "Job not found"}), 404
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+    // Resend OTP
+    async function resendOtp() {
+      if (!userEmail) return;
+      const messageBox = document.getElementById("message");
+      const errorBox = document.getElementById("error");
+      messageBox.innerText = "";
+      errorBox.innerText = "";
 
+      try {
+        const res = await fetch("http://127.0.0.1:5000/resend_email_otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userEmail })
+        });
 
-# ---------------- GET ALL RENTALS ----------------
-@app.route("/rentals", methods=["GET"])
-def get_rentals():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM rentals ORDER BY created_at DESC")
-        rentals = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return jsonify(rentals), 200
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
+        const data = await res.json();
+        if (res.ok) {
+          messageBox.innerText = "📨 OTP resent successfully!";
+        } else {
+          errorBox.innerText = data.message;
+        }
+      } catch (err) {
+        errorBox.innerText = "⚠️ Failed to resend OTP.";
+      }
+    }
 
-
-# ---------------- GET SINGLE RENTAL DETAILS ----------------
-@app.route("/rentals/<int:id>", methods=["GET"])
-def get_rental_details(id):
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM rentals WHERE id=%s", (id,))
-        rental = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        if rental:
-            return jsonify(rental), 200
-        return jsonify({"message": "Rental not found"}), 404
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
-
-
-# ---------------- TRENDING ----------------
-@app.route("/trending", methods=["GET"])
-def get_trending():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            (SELECT id, title, description, 'job' AS type, created_at FROM jobs ORDER BY created_at DESC LIMIT 3)
-            UNION
-            (SELECT id, title, description, 'rental' AS type, created_at FROM rentals ORDER BY created_at DESC LIMIT 3)
-            ORDER BY created_at DESC
-        """)
-        trending = cursor.fetchall()
-
-        for item in trending:
-            if item['type'] == 'job':
-                item['url'] = f"/job_details?id={item['id']}"
-            else:
-                item['url'] = f"/rental_details?id={item['id']}"
-
-        cursor.close()
-        conn.close()
-        return jsonify(trending), 200
-    except Exception as e:
-        print("🔥 SERVER ERROR:", e)
-        return jsonify({"message": "Server error"}), 500
-
-
-# ---------------- HTML ROUTES ----------------
-@app.route("/job_details")
-def job_details_page():
-    job_id = request.args.get("id")
-    return render_template("job_details.html", job_id=job_id)
-
-
-@app.route("/rental_details")
-def rental_details_page():
-    rental_id = request.args.get("id")
-    return render_template("rental_details.html", rental_id=rental_id)
-
-
-@app.route("/reset")
-def reset_page():
-    return render_template("reset_password.html")
-
-
-# ---------------- MAIN ----------------
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
-
+    // Google Login
+    function loginWithGoogle() {
+      window.location.href = "http://127.0.0.1:5000/login/google";
+    }
+  </script>
+</body>
+</html>
 
 
 
