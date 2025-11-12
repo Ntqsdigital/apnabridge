@@ -98,8 +98,8 @@
     <h2>Add a Rental Listing</h2>
     <form onsubmit="submitRental(event)">
       <input type="text" id="title" placeholder="Property Title" required>
-      <input type="text" id="Email" placeholder="Email" required>
-      <input type="text" id="Mobile" placeholder="Mobile" required>
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="text" id="mobile" placeholder="Mobile" required>
       <input type="text" id="location" placeholder="Location" required>
       <input type="text" id="price" placeholder="Price (₹)" required>
       <textarea id="description" placeholder="Description" rows="4"></textarea>
@@ -116,8 +116,8 @@
     e.preventDefault();
     const payload = {
       title: document.getElementById("title").value,
-      Email: document.getElementById("Email").value,
-      Mobile: document.getElementById("Mobile").value,
+      email: document.getElementById("email").value,
+      mobile: document.getElementById("mobile").value,
       location: document.getElementById("location").value,
       price: document.getElementById("price").value,
       description: document.getElementById("description").value
@@ -129,16 +129,17 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      alert(data.message || "Rental added!");
+      alert(data.message || "Rental added successfully!");
       if (res.ok) window.location.href = "rentals.html";
     } catch (err) {
       console.error(err);
-      alert("Network error — please check backend.");
+      alert("Network error — please check backend connection.");
     }
   }
   </script>
 </body>
 </html>
+
 
 
 
