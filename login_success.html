@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome | ApnaBridge</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #74b9ff, #0984e3);
+      color: #2d3436;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+      text-align: center;
+      width: 350px;
+    }
+    h2 { color: #0984e3; }
+    p { color: #636e72; font-size: 16px; }
+    button {
+      background-color: #0984e3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: background 0.3s;
+      margin-top: 15px;
+    }
+    button:hover { background-color: #74b9ff; }
+    .logout-btn {
+      background-color: #d63031;
+      margin-top: 20px;
+    }
+    .logout-btn:hover { background-color: #ff7675; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🎉 Welcome to ApnaBridge</h2>
+    <p id="status">Login verified successfully!</p>
+    <button onclick="goToHome()">Go to Home</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    const user = JSON.parse(sessionStorage.getItem("google_user"));
+
+    // If no user session found, redirect to login
+    if (!user || !user.email) {
+      alert("No user data found. Please log in again.");
+      window.location.href = "login.html";
+    }
+
+    function goToHome() {
+      window.location.href = "index.html";
+    }
+
+    function logout() {
+      // Clear client-side session immediately
+      sessionStorage.removeItem("google_user");
+
+      // Optional: clear server-side session asynchronously
+      fetch("http://127.0.0.1:5000/logout", { method: "POST" })
+        .then(response => response.json())
+        .then(data => {
+          console.log("Server logout:", data.message);
+        })
+        .catch(err => console.error("Logout error:", err));
+
+      // Show popup and redirect immediately
+      alert("You have been logged out successfully!");
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>
