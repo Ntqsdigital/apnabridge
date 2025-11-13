@@ -188,6 +188,13 @@
   <script>
     let userEmail = "";
 
+    // --- Check if user is already logged in ---
+    const loggedInUser = JSON.parse(sessionStorage.getItem("google_user"));
+    if (loggedInUser && loggedInUser.email) {
+      alert("You are already logged in!");
+      window.location.href = "login_success.html";
+    }
+
     function togglePassword() {
       const passField = document.getElementById("password");
       passField.type = passField.type === "password" ? "text" : "password";
@@ -290,6 +297,7 @@
   </script>
 </body>
 </html>
+
 
 
 
