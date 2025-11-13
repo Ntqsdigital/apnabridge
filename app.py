@@ -13,15 +13,29 @@ import os
 
 # ---------------- APP SETUP ----------------
 app = Flask(__name__, template_folder="templates")
-CORS(app)
-app.secret_key = "super_secret_key"
 
-# ✅ GOOGLE OAUTH CONFIG
+# ---------------- SESSION & CORS (fixed for cross-origin login/logout) ----------------
+# Use env var in production; keeping your current secret for dev is fine for now
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "super_secret_key")
+
+# Important: allow credentials and explicitly allow your frontend origin(s)
+# Replace or add additional origins as needed (e.g., http://localhost:5500)
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["http://127.0.0.1:5500", "http://localhost:5500"]}})
+
+# Cookie settings — for cross-origin fetch with cookies in local dev:
+# - SameSite=None allows the cookie to be sent on cross-site requests
+# - SESSION_COOKIE_SECURE=False so it works without HTTPS (dev only)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "None"   # <-- important for cross-site fetches
+app.config["SESSION_COOKIE_SECURE"] = False      # keep False for local dev; set True in production
+app.permanent_session_lifetime = timedelta(days=7)
+
+# ---------------- GOOGLE OAUTH CONFIG ----------------
 oauth = OAuth(app)
 google = oauth.register(
     name='google',
-    client_id='183402241443-mno35b8tj1gj92rjo7t56lcae69tjj4m.apps.googleusercontent.com',
-    client_secret='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',
+    client_id='818708622163-d30fe57qp96gdamv6uui98u776nlt8mg.apps.googleusercontent.com',
+    client_secret='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',
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     access_token_url='https://accounts.google.com/o/oauth2/token',
     access_token_params=None,
@@ -130,7 +144,7 @@ def login():
 @app.route("/verify_email_otp", methods=["POST"])
 def verify_email_otp():
     try:
-        data = request.get_json()
+        data = request.get_json() or {}
         email = data.get("email")
         otp = data.get("otp")
 
@@ -143,8 +157,17 @@ def verify_email_otp():
             return jsonify({"message": "OTP expired ⏰"}), 400
 
         if record["otp"] == otp:
+            # OTP verified -> set session (login)
             active_otps.pop(email, None)
-            return jsonify({"message": "✅ OTP verified successfully!"}), 200
+
+            # make session persistent (optional)
+            session.permanent = True
+            session["user_email"] = email
+
+            # DEBUG: print session info so you can see it in backend logs
+            print("VERIFY EMAIL OTP: session set ->", dict(session))
+
+            return jsonify({"message": "✅ OTP verified successfully!", "logged_in": True, "email": email}), 200
         else:
             return jsonify({"message": "❌ Invalid OTP"}), 400
 
@@ -232,7 +255,11 @@ def verify_register_otp():
         conn.close()
 
         active_otps.pop(email, None)
-        return jsonify({"message": "Registration successful ✅"}), 200
+        # auto-login after successful registration
+        session.permanent = True
+        session["user_email"] = email
+        print("VERIFY REGISTER OTP: session set ->", dict(session))
+        return jsonify({"message": "Registration successful ✅", "logged_in": True, "email": email}), 200
 
     except Exception as e:
         print("🔥 VERIFY REGISTER OTP ERROR:", e)
@@ -276,6 +303,7 @@ def authorize_google():
     conn.close()
 
     session["user_email"] = email
+    print("GOOGLE CALLBACK: session set ->", dict(session))
     return redirect("http://127.0.0.1:5500/index.html")
 
 # ---- RESET PASSWORD ----
@@ -497,9 +525,28 @@ def rental_details_page():
     rental_id = request.args.get("id")
     return render_template("rental_details.html", rental_id=rental_id)
 
+# ---- Session helpers: /me and /logout ----
+@app.route("/me", methods=["GET"])
+def me():
+    user_email = session.get("user_email")
+    print("ME endpoint called, session:", dict(session))
+    if not user_email:
+        return jsonify({"logged_in": False}), 200
+    return jsonify({"logged_in": True, "email": user_email}), 200
+
+# ---- LOGOUT ----
+@app.route("/logout", methods=["POST"])
+def logout():
+    try:
+        session.pop("user_email", None)  # Clear server-side session
+        return jsonify({"message": "Logged out successfully ✅"}), 200
+    except Exception as e:
+        print("🔥 LOGOUT ERROR:", e)
+        return jsonify({"message": "Server error"}), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
-
 
 
 
