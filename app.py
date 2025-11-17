@@ -35,7 +35,7 @@ oauth = OAuth(app)
 google = oauth.register(
     name='google',
     client_id='818708622163-d30fe57qp96gdamv6uui98u776nlt8mg.apps.googleusercontent.com',
-    client_secret='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',
+    client_secret='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',
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     access_token_url='https://accounts.google.com/o/oauth2/token',
     access_token_params=None,
@@ -545,12 +545,90 @@ def logout():
         return jsonify({"message": "Server error"}), 500
 
 
+# ----------------- RESEND OTP LOGIC (ADDED) -----------------
+# The block below is appended and does not change any existing lines above.
+# It implements a resend endpoint using the in-memory active_otps dict that already exists.
+
+RESEND_COOLDOWN_SECONDS = 60   # disable resend for 60 seconds after a send
+MAX_RESENDS_PER_WINDOW = 3     # max resends allowed in window
+RESEND_WINDOW_HOURS = 1        # window length for counting resends (hours)
+resend_meta = {}               # structure: { email: {"count": int, "window_start": datetime, "last_sent": datetime} }
+
+@app.route("/resend_otp", methods=["POST"])
+def resend_otp():
+    try:
+        data = request.get_json() or {}
+        # Prefer client-sent email (the frontend already sends email in your flows), otherwise try session
+        email = data.get("email") or session.get("user_email") or session.get("pending_email")
+        if not email:
+            # intentionally vague, match your existing endpoints' style
+            return jsonify({"message": "Email is required to resend OTP"}), 400
+
+        now = now_utc()
+
+        # check if there is an active OTP for this email (login/register flows populate active_otps)
+        record = active_otps.get(email)
+        if not record:
+            # No active OTP - either expired or never requested
+            return jsonify({"message": "No OTP request found for this email. Please request a new OTP."}), 400
+
+        # initialize meta for this email if missing
+        meta = resend_meta.get(email, {})
+        window_start = meta.get("window_start")
+        count = meta.get("count", 0)
+        last_sent = meta.get("last_sent")
+
+        if window_start is None:
+            window_start = now
+            count = 0
+
+        # reset window if expired
+        if now - window_start > timedelta(hours=RESEND_WINDOW_HOURS):
+            window_start = now
+            count = 0
+
+        # check max resends in window
+        if count >= MAX_RESENDS_PER_WINDOW:
+            return jsonify({"message": "Reached maximum resend attempts. Try again later."}), 429
+
+        # check cooldown based on last_sent
+        if last_sent:
+            seconds_since = (now - last_sent).total_seconds()
+            if seconds_since < RESEND_COOLDOWN_SECONDS:
+                cooldown_left = int(RESEND_COOLDOWN_SECONDS - seconds_since)
+                return jsonify({"message": "Please wait before resending OTP.", "cooldown": cooldown_left}), 429
+
+        # generate new OTP and update active_otps
+        otp = str(random.randint(100000, 999999))
+        expiry = now + timedelta(minutes=2)
+        active_otps[email] = {
+            "otp": otp,
+            "expires": expiry,
+            "purpose": record.get("purpose", "resend"),
+            "meta": record.get("meta")  # preserve registration meta if present
+        }
+
+        # update resend_meta
+        count += 1
+        resend_meta[email] = {"count": count, "window_start": window_start, "last_sent": now}
+
+        # send the email
+        sent = send_email_otp(email, otp)
+        if not sent:
+            # revert active_otps/resend_meta if needed (keep simple: decrement count & last_sent)
+            # decrement count safely
+            resend_meta[email]["count"] = max(0, resend_meta[email]["count"] - 1)
+            return jsonify({"message": "❌ Failed to send OTP. Try again later."}), 500
+
+        return jsonify({"message": "OTP resent to your email ✅", "cooldown": RESEND_COOLDOWN_SECONDS, "email": email}), 200
+
+    except Exception as e:
+        print("🔥 RESEND OTP ERROR:", e)
+        return jsonify({"message": "Server error"}), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
-
-
-
-
 
 
 
