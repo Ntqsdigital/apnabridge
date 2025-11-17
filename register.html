@@ -160,6 +160,8 @@
           <option value="">Select Role</option>
           <option value="student">Student</option>
           <option value="employer">Employer</option>
+          <option value="site/flat/houseowner">Site/Flat/SiteOwner</option>
+          <option value="rent">Rent</option>
         </select>
 
         <div class="password-wrapper">
@@ -186,7 +188,7 @@
       <input type="text" id="otp" placeholder="Enter OTP" maxlength="6">
       <button onclick="verifyOtp()" class="btn">Verify OTP</button>
       <p style="font-size: 14px; margin-top: 8px;">
-        Didn’t get the code? <a href="#" onclick="resendOtp()">Resend</a>
+        Didn’t get the code? <a href="#" onclick="resendOtp()" id="resend-link">Resend</a>
       </p>
     </div>
 
@@ -201,6 +203,7 @@
 
   <script>
     let userEmail = "";
+    let resendTimer = null;
 
     // Toggle password visibility
     function togglePassword() {
@@ -274,6 +277,29 @@
       }
     }
 
+    // Resend OTP helper with cooldown
+    function startResendCooldown(seconds) {
+      const link = document.getElementById("resend-link");
+      if (!link) return;
+      let s = Math.max(1, Math.floor(seconds || 60));
+      link.style.pointerEvents = "none";
+      link.style.opacity = "0.5";
+      const originalText = link.textContent;
+      link.textContent = `Resend (${s}s)`;
+      resendTimer = setInterval(() => {
+        s--;
+        if (s <= 0) {
+          clearInterval(resendTimer);
+          link.style.pointerEvents = "";
+          link.style.opacity = "";
+          link.textContent = originalText;
+          resendTimer = null;
+        } else {
+          link.textContent = `Resend (${s}s)`;
+        }
+      }, 1000);
+    }
+
     // Resend OTP
     async function resendOtp() {
       if (!userEmail) return;
@@ -291,9 +317,16 @@
 
         const data = await res.json();
         if (res.ok) {
-          messageBox.innerText = "📨 OTP resent successfully!";
+          messageBox.style.color = "#0077b6";
+          messageBox.innerText = data.message || "📨 OTP resent successfully!";
+          startResendCooldown(data.cooldown || 60);
         } else {
-          errorBox.innerText = data.message;
+          if (res.status === 429 && data.cooldown) {
+            errorBox.innerText = data.message || "Please wait before resending OTP.";
+            startResendCooldown(data.cooldown);
+          } else {
+            errorBox.innerText = data.message || "❌ Failed to resend OTP.";
+          }
         }
       } catch (err) {
         errorBox.innerText = "⚠️ Failed to resend OTP.";
@@ -302,7 +335,6 @@
 
     // Google Register
     function registerWithGoogle() {
-      // Redirect to Flask route for Google OAuth
       window.location.href = "http://127.0.0.1:5000/login/google";
     }
   </script>
