@@ -292,6 +292,87 @@
     }
     .social-icons a:hover { transform: rotate(15deg) scale(1.1); }
 
+    /* FAQ Section */
+    .faq-section {
+      padding: 60px 10%;
+      background: linear-gradient(180deg, #e8f5ff, #ffffff);
+    }
+    .faq-section h2 {
+      text-align: center;
+      color: #0077b6;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+    .faq-list {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .faq-item {
+      margin-bottom: 15px;
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    .faq-item summary {
+      padding: 14px 18px;
+      cursor: pointer;
+      list-style: none;
+      font-weight: 600;
+      color: #023e8a;
+    }
+    .faq-item summary::-webkit-details-marker {
+      display: none;
+    }
+    .faq-item summary::after {
+      content: "+";
+      float: right;
+      font-weight: bold;
+    }
+    .faq-item[open] summary::after {
+      content: "-";
+    }
+    .faq-item p {
+      padding: 0 18px 16px 18px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    /* WhatsApp Floating Button */
+    .whatsapp-float {
+      position: fixed;
+      width: 56px;
+      height: 56px;
+      bottom: 20px;
+      right: 20px;
+      background: #25D366;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 26px;
+      text-decoration: none;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+      z-index: 3000;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .whatsapp-float:hover {
+      transform: translateY(-4px) scale(1.05);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+    }
+    .whatsapp-float span {
+      position: absolute;
+      bottom: 70px;
+      right: 0;
+      background: #ffffff;
+      color: #333;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
   </style>
 </head>
 
@@ -380,6 +461,33 @@
     </div>
   </section>
 
+  <!-- FAQ Section -->
+  <section class="faq-section" id="faqs">
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>What is ApnaBridge?</summary>
+        <p>ApnaBridge is a platform where you can find verified job opportunities and rental properties in different cities.</p>
+      </details>
+      <details class="faq-item">
+        <summary>How do I list my job or rental?</summary>
+        <p>You can click on the “List Your Job” or “List Your Rental” buttons in the top navigation bar and fill out the form with your details.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Is using ApnaBridge free?</summary>
+        <p>Browsing jobs and rentals is free for users. Listing policies and charges, if any, depend on future business rules of ApnaBridge.</p>
+      </details>
+      <details class="faq-item">
+        <summary>How do I contact the owner or recruiter?</summary>
+        <p>Open any listing and you will find the contact details or application method provided by the owner or recruiter.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Can I search only in my city?</summary>
+        <p>Yes, you can select your city from the location dropdown in the search bar on the home page and then search.</p>
+      </details>
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer>
     <div>
@@ -405,7 +513,13 @@
     </div>
   </footer>
 
-  <p style="text-align:center; padding:10px; background:#0077b6; color:white;">© 2025 ApnaBridge | Designed by Ganeshsai</p>
+  <p style="text-align:center; padding:10px; background:#0077b6; color:white;">© 2025 ApnaBridge | Designed by Ntqs  </p>
+
+  <!-- WhatsApp Chat Button (update the phone number as needed) -->
+  <a href="https://wa.me/918501027056?text=Hi%20ApnaBridge%2C%20I%20need%20some%20help." class="whatsapp-float" target="_blank" rel="noopener">
+    💬
+    <span>Chat on WhatsApp</span>
+  </a>
 
   <script>
     function toggleMenu(){document.getElementById("sidebar").classList.toggle("active");document.getElementById("overlay").classList.toggle("active");}
@@ -424,7 +538,7 @@
       }
       window.location.href=`${targetPage}?query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}`;
     }
-    function logout(){alert("You have been logged out!");window.location.href="index.html";}
+    function logout(){alert("You have been logged out!");localStorage.removeItem("loggedIn");window.location.href="index.html";}
     async function loadTrending(){
       const jobContainer=document.getElementById("jobContainer");
       const rentalContainer=document.getElementById("rentalContainer");
@@ -446,12 +560,96 @@
     }
     function escapeHtml(str){return str?String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"):"";}
     document.addEventListener("DOMContentLoaded", loadTrending);
+
+    /* ---------------
+       LOGIN REQUIRED LOGIC
+       (only added code, existing lines are unchanged)
+    --------------- */
+    function isLoggedIn(){
+      return localStorage.getItem("loggedIn") === "true";
+    }
+
+    function shouldProtectElement(el){
+      if(!el) return false;
+      const tag = el.tagName;
+      const href = (el.getAttribute("href") || "").toLowerCase();
+
+      // Do NOT protect login page link
+      if (href.includes("login.html")) return false;
+
+      // Protect links going to jobs/rentals/add pages/details
+      if (href && (
+        href.includes("jobs.html") ||
+        href.includes("rentals.html") ||
+        href.includes("add-job.html") ||
+        href.includes("add-rental.html") ||
+        href.includes("job_details.html") ||
+        href.includes("rental_details.html")
+      )){
+        return true;
+      }
+
+      // Protect buttons like "List Your Job", "List Your Rental", "View Jobs", "View Rentals"
+      if (tag === "BUTTON" && el.classList.contains("list-btn")) {
+        return true;
+      }
+
+      // Protect trending listing links (extra safety)
+      if (el.classList.contains("listing-link")) {
+        return true;
+      }
+
+      return false;
+    }
+
+    function getTargetUrlFromElement(el){
+      let href = el.getAttribute("href") || "";
+
+      if (!href && el.tagName === "BUTTON") {
+        const onclickAttr = el.getAttribute("onclick") || "";
+        const match = onclickAttr.match(/'([^']+\.html[^']*)'/);
+        if (match && match[1]) {
+          href = match[1];
+        }
+      }
+
+      if (!href || href === "#") {
+        href = "index.html";
+      }
+      return href;
+    }
+
+    // Intercept clicks BEFORE inline onclick handlers
+    document.addEventListener("click", function(e){
+      const target = e.target.closest("a,button");
+      if (!target) return;
+
+      if (!shouldProtectElement(target)) return;
+      if (isLoggedIn()) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const nextPage = getTargetUrlFromElement(target);
+      window.location.href = "login.html?redirect=" + encodeURIComponent(nextPage);
+    }, true);
+
+    // ---- ADDED: stronger logout – clears google_user so login.html doesn't auto-skip ----
+    function logout(){
+      alert("You have been logged out!");
+      // clear all login markers
+      localStorage.removeItem("loggedIn");
+      localStorage.removeItem("apnabridge_isLoggedIn");
+      try {
+        sessionStorage.removeItem("google_user");
+      } catch (e) {}
+      // back to home page
+      window.location.href = "index.html";
+    }
   </script>
 
 </body>
 </html>
-
-
 
 
 
