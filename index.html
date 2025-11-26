@@ -494,23 +494,28 @@
 
     .social-icons a:nth-child(1) {
       /* Instagram */
-      background-image: url("https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg");
+      background-image: linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7);
+      color: #fff;
     }
     .social-icons a:nth-child(2) {
       /* Facebook */
-      background-image: url("https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg");
+      background-color: #1877F2;
+      color: #fff;
     }
     .social-icons a:nth-child(3) {
       /* YouTube */
-      background-image: url("https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg");
+      background-color: #FF0000;
+      color: #fff;
     }
     .social-icons a:nth-child(4) {
       /* X (Twitter) */
-      background-image: url("https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/x.svg");
+      background-color: #000000;
+      color: #fff;
     }
     .social-icons a:nth-child(5) {
       /* LinkedIn */
-      background-image: url("https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg");
+      background-color: #0A66C2;
+      color: #fff;
     }
 
     /* =====================
@@ -539,33 +544,89 @@
       margin-top: 6px;
     }
 
+    /* ADDED: footer logo styling */
+    .footer-logo {
+      height: 150px;
+      width: auto;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+    }
+
     /* =====================
-       BRAND COLORS (ONLY ADDED)
+       CORPORATE DETAILS SECTION (NEW)
        ===================== */
-    .social-icons a:nth-child(1) {
-      /* Instagram gradient style */
-      background-image: linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7);
-      color: #fff;
+    .corp-details {
+      display: none;
+      background: #f4f7fb;
+      padding: 30px 60px;
+      border-top: 1px solid rgba(0,0,0,0.06);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
     }
-    .social-icons a:nth-child(2) {
-      /* Facebook blue */
-      background-color: #1877F2;
-      color: #fff;
+    .corp-details h2 {
+      color: #023e8a;
+      margin-bottom: 10px;
+      font-size: 22px;
     }
-    .social-icons a:nth-child(3) {
-      /* YouTube red */
-      background-color: #FF0000;
-      color: #fff;
+    .corp-details p {
+      font-size: 14px;
+      color: #444;
+      margin-bottom: 6px;
     }
-    .social-icons a:nth-child(4) {
-      /* X (Twitter) black */
-      background-color: #000000;
-      color: #fff;
+    .corp-form {
+      max-width: 480px;
+      margin-top: 12px;
     }
-    .social-icons a:nth-child(5) {
-      /* LinkedIn blue */
-      background-color: #0A66C2;
+    .corp-form-row {
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    .corp-form-row label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #023e8a;
+    }
+    .corp-form-row input,
+    .corp-form-row textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      font-size: 14px;
+      outline: none;
+    }
+    .corp-form-row textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+    .corp-form button {
+      margin-top: 8px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: none;
+      background: #0077b6;
       color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .corp-form button:hover {
+      background: #023e8a;
+    }
+    .corp-note {
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    .corp-note a {
+      color: #023e8a;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .corp-details {
+        padding: 20px 16px;
+      }
     }
   </style>
 </head>
@@ -707,6 +768,12 @@
       <a href="add-rental.html">Add Rental</a>
     </div>
   </footer>
+
+  <!-- NEW: Corporate details block that appears when clicking footer items -->
+  <section id="corporate-details" class="corp-details">
+    <h2 id="corp-details-title"></h2>
+    <div id="corp-details-body"></div>
+  </section>
 
   <p style="text-align:center; padding:10px; background:#0077b6; color:white;">© 2025 ApnaBridge | Designed by Ntqs  </p>
 
@@ -864,10 +931,87 @@
         }
       });
     });
+
+    // ADDED: Corporate links show details section (About Us, Contact, etc.)
+    document.addEventListener("DOMContentLoaded", function () {
+      const corpSection = document.getElementById("corporate-details");
+      const titleEl = document.getElementById("corp-details-title");
+      const bodyEl = document.getElementById("corp-details-body");
+      if (!corpSection || !titleEl || !bodyEl) return;
+
+      // second column of footer (Corporate)
+      const corporateColumn = document.querySelector("footer > div:nth-child(2)");
+      if (!corporateColumn) return;
+
+      const links = corporateColumn.querySelectorAll("a");
+      if (!links.length) return;
+
+      const contentMap = {
+        "About Us": {
+          title: "About ApnaBridge",
+          body: `<p>ApnaBridge is a local-first platform that connects job seekers, recruiters, tenants and property owners in one simple place.</p>
+                 <p>Our goal is to make it easy for people to discover verified jobs and affordable rental options in their own city.</p>`
+        },
+        "Contact": {
+          title: "Contact ApnaBridge",
+          body: `<p>Have a question or want to work with us? Share your details below and our team will get back to you.</p>
+                 <form class="corp-form" onsubmit="event.preventDefault(); alert('Thank you! We will contact you soon.');">
+                   <div class="corp-form-row">
+                     <label for="corpName">Full Name</label>
+                     <input id="corpName" type="text" placeholder="Your name" required>
+                   </div>
+                   <div class="corp-form-row">
+                     <label for="corpEmail">Email</label>
+                     <input id="corpEmail" type="email" placeholder="you@example.com" required>
+                   </div>
+                   <div class="corp-form-row">
+                     <label for="corpPhone">Phone Number</label>
+                     <input id="corpPhone" type="tel" placeholder="+91-XXXXXXXXXX">
+                   </div>
+                   <div class="corp-form-row">
+                     <label for="corpMsg">Message</label>
+                     <textarea id="corpMsg" placeholder="Tell us how we can help"></textarea>
+                   </div>
+                   <button type="submit">Submit</button>
+                 </form>
+                 <p class="corp-note">You can also reach us at
+                   <a href="mailto:support@apnabridge.com">support@apnabridge.com</a>
+                   or call <strong>+91-85010-27056</strong>.
+                 </p>`
+        },
+        "Terms & Conditions": {
+          title: "Terms & Conditions",
+          body: `<p>ApnaBridge provides a listing platform for jobs and rentals. We do not guarantee hiring decisions, property availability or agreements between users.</p>
+                 <p>Users are responsible for verifying listings, documents and payments before entering into any agreement.</p>`
+        },
+        "Privacy Policy": {
+          title: "Privacy Policy",
+          body: `<p>We respect your privacy and only collect basic information needed to run the platform and improve your experience.</p>
+                 <p>Your data is never sold to third parties. For any privacy-related queries, write to
+                    <a href="mailto:privacy@apnabridge.com">privacy@apnabridge.com</a>.
+                 </p>`
+        }
+      };
+
+      links.forEach(link => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          const key = this.textContent.trim();
+          const cfg = contentMap[key];
+          if (!cfg) return;
+          titleEl.textContent = cfg.title;
+          bodyEl.innerHTML = cfg.body;
+          corpSection.style.display = "block";
+          corpSection.scrollIntoView({ behavior: "smooth" });
+        });
+      });
+    });
   </script>
 
 </body>
 </html>
+
+
 
 
 
