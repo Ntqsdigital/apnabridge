@@ -188,6 +188,16 @@
   <script>
     let userEmail = "";
 
+    // NEW: if not actually logged in, don't auto-use old google_user for redirect
+    (function(){
+      try {
+        const isStillLoggedIn = localStorage.getItem("loggedIn") === "true";
+        if (!isStillLoggedIn) {
+          sessionStorage.removeItem("google_user");
+        }
+      } catch (e) {}
+    })();
+
     // --- Check if user is already logged in ---
     const loggedInUser = JSON.parse(sessionStorage.getItem("google_user"));
     if (loggedInUser && loggedInUser.email) {
@@ -227,6 +237,8 @@
         } else if (res.ok && data.message.includes("successful")) {
           messageBox.innerText = "✅ Login successful!";
           sessionStorage.setItem("google_user", JSON.stringify({ email }));
+          handleLoginSuccess();
+          return;
           setTimeout(() => window.location.href = "login_success.html", 1000);
         } else {
           errorBox.innerText = data.message;
@@ -255,6 +267,8 @@
         if (res.ok) {
           messageBox.innerText = "✅ OTP verified successfully!";
           sessionStorage.setItem("google_user", JSON.stringify({ email: userEmail }));
+          handleLoginSuccess();
+          return;
           setTimeout(() => window.location.href = "login_success.html", 1000);
         } else {
           errorBox.innerText = data.message;
@@ -328,9 +342,61 @@
     function loginWithGoogle() {
       window.location.href = "http://127.0.0.1:5000/login/google";
     }
+
+    // ---- ADDED: handleLoginSuccess for ApnaBridge auth guard ----
+    function handleLoginSuccess() {
+      // mark user as logged in
+      localStorage.setItem("apnabridge_isLoggedIn", "true");
+
+      // redirect back to the page user wanted to open, if any
+      const redirectUrl = localStorage.getItem("apnabridge_redirectAfterLogin");
+      if (redirectUrl) {
+        localStorage.removeItem("apnabridge_redirectAfterLogin");
+        window.location.href = redirectUrl;
+      } else {
+        window.location.href = "index.html";
+      }
+    }
+
+    // ---- NEW: enhanced redirect + match index.html guard (ONLY ADDED, nothing removed) ----
+    function apnaBridgeGetRedirectFromQuery() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const r = params.get("redirect");
+        return r && r.trim() ? r : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // this overrides the earlier handleLoginSuccess (same name), but we did NOT change any existing line
+    function handleLoginSuccess() {
+      // keep old flag for compatibility
+      localStorage.setItem("apnabridge_isLoggedIn", "true");
+      // key used by index.html auth guard
+      localStorage.setItem("loggedIn", "true");
+
+      // 1) Prefer ?redirect=... from URL (set by index.html)
+      const qRedirect = apnaBridgeGetRedirectFromQuery();
+      if (qRedirect) {
+        window.location.href = qRedirect;
+        return;
+      }
+
+      // 2) Fallback to stored redirect (if you ever set apnabridge_redirectAfterLogin)
+      const redirectUrl = localStorage.getItem("apnabridge_redirectAfterLogin");
+      if (redirectUrl) {
+        localStorage.removeItem("apnabridge_redirectAfterLogin");
+        window.location.href = redirectUrl;
+      } else {
+        // 3) Default: go to home
+        window.location.href = "index.html";
+      }
+    }
   </script>
 </body>
 </html>
+
 
 
 
