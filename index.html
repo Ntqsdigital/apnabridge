@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ApnaBridge | Jobs & Rentals</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <!-- ADDED: Font Awesome for social logos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -475,6 +478,95 @@
         justify-content: center;
       }
     }
+
+    /* =====================
+       SOCIAL ICON LOGOS (ONLY ADDED)
+       ===================== */
+    .social-icons a {
+      position: relative;
+      overflow: hidden;
+      font-size: 0;           /* hide F/I/Y/X/L text visually */
+      text-indent: -9999px;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 60%;
+    }
+
+    .social-icons a:nth-child(1) {
+      /* Instagram */
+      background-image: url("https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg");
+    }
+    .social-icons a:nth-child(2) {
+      /* Facebook */
+      background-image: url("https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg");
+    }
+    .social-icons a:nth-child(3) {
+      /* YouTube */
+      background-image: url("https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg");
+    }
+    .social-icons a:nth-child(4) {
+      /* X (Twitter) */
+      background-image: url("https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/x.svg");
+    }
+    .social-icons a:nth-child(5) {
+      /* LinkedIn */
+      background-image: url("https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/linkedin.svg");
+    }
+
+    /* =====================
+       EXTRA: Font Awesome fallback so logos always show
+       ===================== */
+    .social-icons a::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Font Awesome 6 Brands";
+      font-weight: 400;
+      font-size: 18px;
+      text-indent: 0;
+    }
+    .social-icons a:nth-child(1)::before { content: "\f16d"; } /* Instagram */
+    .social-icons a:nth-child(2)::before { content: "\f09a"; } /* Facebook */
+    .social-icons a:nth-child(3)::before { content: "\f167"; } /* YouTube  */
+    .social-icons a:nth-child(4)::before { content: "\f099"; } /* Twitter/X */
+    .social-icons a:nth-child(5)::before { content: "\f0e1"; } /* LinkedIn */
+
+    /* small gap between the two footer paragraphs */
+    footer p + p {
+      margin-top: 6px;
+    }
+
+    /* =====================
+       BRAND COLORS (ONLY ADDED)
+       ===================== */
+    .social-icons a:nth-child(1) {
+      /* Instagram gradient style */
+      background-image: linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7);
+      color: #fff;
+    }
+    .social-icons a:nth-child(2) {
+      /* Facebook blue */
+      background-color: #1877F2;
+      color: #fff;
+    }
+    .social-icons a:nth-child(3) {
+      /* YouTube red */
+      background-color: #FF0000;
+      color: #fff;
+    }
+    .social-icons a:nth-child(4) {
+      /* X (Twitter) black */
+      background-color: #000000;
+      color: #fff;
+    }
+    .social-icons a:nth-child(5) {
+      /* LinkedIn blue */
+      background-color: #0A66C2;
+      color: #fff;
+    }
   </style>
 </head>
 
@@ -595,6 +687,7 @@
     <div>
       <h3>About ApnaBridge</h3>
       <p>Your trusted platform to find verified jobs and rental listings easily.</p>
+      <p>Connect with us</p>
       <div class="social-icons">
         <a href="#">F</a><a href="#">I</a><a href="#">Y</a><a href="#">X</a><a href="#">L</a>
       </div>
@@ -748,11 +841,33 @@
       // back to home page
       window.location.href = "index.html";
     }
+
+    // ADDED: make social icons open real pages in new tab
+    document.addEventListener("DOMContentLoaded", function () {
+      const socials = document.querySelectorAll(".social-icons a");
+      if (!socials.length) return;
+
+      // change these URLs to your real profiles
+      const urls = [
+        "https://www.instagram.com/",   // Instagram
+        "https://www.facebook.com/",    // Facebook
+        "https://www.youtube.com/",     // YouTube
+        "https://twitter.com/",         // X / Twitter
+        "https://www.linkedin.com/"     // LinkedIn
+      ];
+
+      socials.forEach((link, idx) => {
+        if (urls[idx]) {
+          link.href = urls[idx];
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+        }
+      });
+    });
   </script>
 
 </body>
 </html>
-
 
 
 
