@@ -108,6 +108,8 @@
       cursor: pointer;
       margin-top: 25px;
       transition: all 0.3s;
+      /* OPTIONAL: start hidden, JS will show when logged in */
+      /* display: none; */
     }
     .logout-btn:hover { background: #e60000; transform: scale(1.05); }
 
@@ -642,6 +644,7 @@
     <a href="add-job.html">➕ Add Job</a>
     <a href="add-rental.html">➕ Add Rental</a>
     <a href="login.html">👤 Login</a>
+    <!-- Logout button: will be shown/hidden by JS depending on login -->
     <button class="logout-btn" onclick="logout()">🚪 Logout</button>
   </div>
 
@@ -800,7 +803,7 @@
       }
       window.location.href=`${targetPage}?query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}`;
     }
-    function logout(){alert("You have been logged out!");localStorage.removeItem("loggedIn");window.location.href="index.html";}
+
     async function loadTrending(){
       const jobContainer=document.getElementById("jobContainer");
       const rentalContainer=document.getElementById("rentalContainer");
@@ -821,15 +824,39 @@
       }
     }
     function escapeHtml(str){return str?String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"):"";}
-    document.addEventListener("DOMContentLoaded", loadTrending);
 
     /* ---------------
        LOGIN REQUIRED LOGIC
-       (only added code, existing lines are unchanged)
-    --------------- */
+       --------------- */
     function isLoggedIn(){
       return localStorage.getItem("loggedIn") === "true";
     }
+
+    // NEW: control visibility of Logout button based on login state
+    function updateAuthUI(){
+      const logoutBtn = document.querySelector(".logout-btn");
+      if (!logoutBtn) return;
+      if (isLoggedIn()){
+        logoutBtn.style.display = "block";
+      } else {
+        logoutBtn.style.display = "none";
+      }
+    }
+
+    // Intercept clicks BEFORE inline onclick handlers
+    document.addEventListener("click", function(e){
+      const target = e.target.closest("a,button");
+      if (!target) return;
+
+      if (!shouldProtectElement(target)) return;
+      if (isLoggedIn()) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const nextPage = getTargetUrlFromElement(target);
+      window.location.href = "login.html?redirect=" + encodeURIComponent(nextPage);
+    }, true);
 
     function shouldProtectElement(el){
       if(!el) return false;
@@ -881,22 +908,7 @@
       return href;
     }
 
-    // Intercept clicks BEFORE inline onclick handlers
-    document.addEventListener("click", function(e){
-      const target = e.target.closest("a,button");
-      if (!target) return;
-
-      if (!shouldProtectElement(target)) return;
-      if (isLoggedIn()) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      const nextPage = getTargetUrlFromElement(target);
-      window.location.href = "login.html?redirect=" + encodeURIComponent(nextPage);
-    }, true);
-
-    // ---- ADDED: stronger logout – clears google_user so login.html doesn't auto-skip ----
+    // ---- stronger logout – clears google_user so login.html doesn't auto-skip ----
     function logout(){
       alert("You have been logged out!");
       // clear all login markers
@@ -905,9 +917,16 @@
       try {
         sessionStorage.removeItem("google_user");
       } catch (e) {}
+      updateAuthUI();
       // back to home page
       window.location.href = "index.html";
     }
+
+    // Combined initialiser: load trending + update auth UI
+    document.addEventListener("DOMContentLoaded", function () {
+      loadTrending();
+      updateAuthUI();
+    });
 
     // ADDED: make social icons open real pages in new tab
     document.addEventListener("DOMContentLoaded", function () {
@@ -918,7 +937,7 @@
       const urls = [
         "https://www.instagram.com/ntqs_digital/",   // Instagram
         "https://www.facebook.com/ntqsdigital",    // Facebook
-        "https://www.youtube.com/",     // YouTube
+        "https://www.youtube.com/@ntqs_digital/",     // YouTube
         "https://twitter.com/",         // X / Twitter
         "https://www.linkedin.com/company/ntqs-digital/"     // LinkedIn
       ];
