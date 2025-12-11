@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ApnaBridge | Jobs & Rentals</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <!-- ADDED: Font Awesome for social logos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
   <style>
@@ -635,7 +634,6 @@
 
 <body>
 
-  <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <h2>Menu</h2>
     <a href="index.html">🏠 Home</a>
@@ -644,13 +642,13 @@
     <a href="add-job.html">➕ Add Job</a>
     <a href="add-rental.html">➕ Add Rental</a>
     <a href="login.html">👤 Login</a>
-    <!-- Logout button: will be shown/hidden by JS depending on login -->
+
     <button class="logout-btn" onclick="logout()">🚪 Logout</button>
   </div>
 
   <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-  <!-- Navbar -->
+
   <header class="navbar">
     <div class="nav-left">
       <div class="menu-icon" onclick="toggleMenu()">☰</div>
@@ -666,7 +664,6 @@
     </div>
   </header>
 
-  <!-- Hero Section -->
   <section class="hero">
     <div class="hero-content">
       <h1>Find Jobs & Rentals Near You</h1>
@@ -686,7 +683,6 @@
     </div>
   </section>
 
-  <!-- Services -->
   <section class="services">
     <div class="service-card">
       <img src="https://images.unsplash.com/photo-1521791055366-0d553872125f?auto=format&fit=crop&w=800&q=80" alt="Jobs">
@@ -702,7 +698,6 @@
     </div>
   </section>
 
-  <!-- Trending Section -->
   <section class="trending-section">
     <h2>🔥 Trending Listings</h2>
     <div class="trending-columns">
@@ -719,7 +714,6 @@
     </div>
   </section>
 
-  <!-- FAQ Section -->
   <section class="faq-section" id="faqs">
     <h2>Frequently Asked Questions</h2>
     <div class="faq-list">
@@ -746,7 +740,6 @@
     </div>
   </section>
 
-  <!-- Footer -->
   <footer>
     <div>
       <h3>About ApnaBridge</h3>
@@ -772,7 +765,6 @@
     </div>
   </footer>
 
-  <!-- NEW: Corporate details block that appears when clicking footer items -->
   <section id="corporate-details" class="corp-details">
     <h2 id="corp-details-title"></h2>
     <div id="corp-details-body"></div>
@@ -780,7 +772,6 @@
 
   <p style="text-align:center; padding:10px; background:#0077b6; color:white;">© 2025  Copyright ApnaBridge.com | All Rights Reserved.  </p>
 
-  <!-- WhatsApp Chat Button (update the phone number as needed) -->
   <a href="https://wa.me/918885676957?text=Hi%20ApnaBridge%2C%20I%20need%20some%20help." class="whatsapp-float" target="_blank" rel="noopener">
     💬
     <span>Chat on WhatsApp</span>
@@ -825,14 +816,10 @@
     }
     function escapeHtml(str){return str?String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"):"";}
 
-    /* ---------------
-       LOGIN REQUIRED LOGIC
-       --------------- */
     function isLoggedIn(){
       return localStorage.getItem("loggedIn") === "true";
     }
 
-    // NEW: control visibility of Logout button based on login state
     function updateAuthUI(){
       const logoutBtn = document.querySelector(".logout-btn");
       if (!logoutBtn) return;
@@ -843,7 +830,6 @@
       }
     }
 
-    // Intercept clicks BEFORE inline onclick handlers
     document.addEventListener("click", function(e){
       const target = e.target.closest("a,button");
       if (!target) return;
@@ -863,10 +849,7 @@
       const tag = el.tagName;
       const href = (el.getAttribute("href") || "").toLowerCase();
 
-      // Do NOT protect login page link
       if (href.includes("login.html")) return false;
-
-      // Protect links going to jobs/rentals/add pages/details
       if (href && (
         href.includes("jobs.html") ||
         href.includes("rentals.html") ||
@@ -878,12 +861,10 @@
         return true;
       }
 
-      // Protect buttons like "List Your Job", "List Your Rental", "View Jobs", "View Rentals"
       if (tag === "BUTTON" && el.classList.contains("list-btn")) {
         return true;
       }
 
-      // Protect trending listing links (extra safety)
       if (el.classList.contains("listing-link")) {
         return true;
       }
@@ -907,8 +888,6 @@
       }
       return href;
     }
-
-    // ---- stronger logout – clears google_user so login.html doesn't auto-skip ----
     function logout(){
       alert("You have been logged out!");
       // clear all login markers
@@ -918,28 +897,22 @@
         sessionStorage.removeItem("google_user");
       } catch (e) {}
       updateAuthUI();
-      // back to home page
       window.location.href = "index.html";
     }
-
-    // Combined initialiser: load trending + update auth UI
     document.addEventListener("DOMContentLoaded", function () {
       loadTrending();
       updateAuthUI();
     });
 
-    // ADDED: make social icons open real pages in new tab
     document.addEventListener("DOMContentLoaded", function () {
       const socials = document.querySelectorAll(".social-icons a");
       if (!socials.length) return;
-
-      // change these URLs to your real profiles
       const urls = [
-        "https://www.instagram.com/ntqs_digital/",   // Instagram
-        "https://www.facebook.com/ntqsdigital",    // Facebook
-        "https://www.youtube.com/@ntqs_digital/",     // YouTube
-        "https://twitter.com/",         // X / Twitter
-        "https://www.linkedin.com/company/ntqs-digital/"     // LinkedIn
+        "https://www.instagram.com/ntqs_digital/",  
+        "https://www.facebook.com/ntqsdigital",    
+        "https://www.youtube.com/@ntqs_digital/",     
+        "https://twitter.com/",        
+        "https://www.linkedin.com/company/ntqs-digital/"     
       ];
 
       socials.forEach((link, idx) => {
@@ -951,14 +924,13 @@
       });
     });
 
-    // ADDED: Corporate links show details section (About Us, Contact, etc.)
     document.addEventListener("DOMContentLoaded", function () {
       const corpSection = document.getElementById("corporate-details");
       const titleEl = document.getElementById("corp-details-title");
       const bodyEl = document.getElementById("corp-details-body");
       if (!corpSection || !titleEl || !bodyEl) return;
 
-      // second column of footer (Corporate)
+ 
       const corporateColumn = document.querySelector("footer > div:nth-child(2)");
       if (!corporateColumn) return;
 
@@ -1029,6 +1001,7 @@
 
 </body>
 </html>
+
 
 
 
