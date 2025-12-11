@@ -8,29 +8,17 @@ from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
-from authlib.integrations.flask_client import OAuth  # ✅ added
+from authlib.integrations.flask_client import OAuth  
 import os
 
-# ---------------- APP SETUP ----------------
+
 app = Flask(__name__, template_folder="templates")
-
-# ---------------- SESSION & CORS (fixed for cross-origin login/logout) ----------------
-# Use env var in production; keeping your current secret for dev is fine for now
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "super_secret_key")
-
-# Important: allow credentials and explicitly allow your frontend origin(s)
-# Replace or add additional origins as needed (e.g., http://localhost:5500)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["http://127.0.0.1:5500", "http://localhost:5500"]}})
-
-# Cookie settings — for cross-origin fetch with cookies in local dev:
-# - SameSite=None allows the cookie to be sent on cross-site requests
-# - SESSION_COOKIE_SECURE=False so it works without HTTPS (dev only)
 app.config["SESSION_COOKIE_HTTPONLY"] = True
-app.config["SESSION_COOKIE_SAMESITE"] = "None"   # <-- important for cross-site fetches
-app.config["SESSION_COOKIE_SECURE"] = False      # keep False for local dev; set True in production
+app.config["SESSION_COOKIE_SAMESITE"] = "None"   
+app.config["SESSION_COOKIE_SECURE"] = False      
 app.permanent_session_lifetime = timedelta(days=7)
-
-# ---------------- GOOGLE OAUTH CONFIG ----------------
 oauth = OAuth(app)
 google = oauth.register(
     name='google',
@@ -45,7 +33,6 @@ google = oauth.register(
     client_kwargs={'scope': 'openid email profile'},
 )
 
-# ---------------- DATABASE CONFIG ----------------
 db_config = {
     "host": "localhost",
     "user": "root",
@@ -60,8 +47,6 @@ def get_db_connection():
     except mysql.connector.Error as err:
         print("🔥 Database connection error:", err)
         return None
-
-# ---------------- EMAIL SETTINGS ----------------
 SENDER_EMAIL = "ganeshsai@nuevostech.com"
 SENDER_PASSWORD = "myrvnqpycpouccwb"
 SMTP_SERVER = "smtp.gmail.com"
@@ -85,25 +70,17 @@ def send_email_otp(receiver_email, otp):
     except Exception as e:
         print("🔥 Email sending error:", e)
         return False
-
-# ---------------- HELPERS ----------------
 def hash_password(plain: str) -> str:
     return hashlib.sha256(plain.encode()).hexdigest()
 
 def now_utc():
     return datetime.now()
-
-# ---------------- MEMORY STORE ----------------
 active_otps = {}
 otp_store = {}
 verified_emails = set()
-
-# ---------------- ROUTES ----------------
 @app.route("/")
 def home():
     return jsonify({"message": "ApnaBridge Backend Connected ✅"})
-
-# ---- LOGIN ----
 @app.route("/login", methods=["POST"])
 def login():
     try:
@@ -139,8 +116,6 @@ def login():
     except Exception as e:
         print("🔥 LOGIN ERROR:", e)
         return jsonify({"message": "Server error"}), 500
-
-# ---- VERIFY LOGIN OTP ----
 @app.route("/verify_email_otp", methods=["POST"])
 def verify_email_otp():
     try:
@@ -164,7 +139,6 @@ def verify_email_otp():
             session.permanent = True
             session["user_email"] = email
 
-            # DEBUG: print session info so you can see it in backend logs
             print("VERIFY EMAIL OTP: session set ->", dict(session))
 
             return jsonify({"message": "✅ OTP verified successfully!", "logged_in": True, "email": email}), 200
@@ -175,7 +149,6 @@ def verify_email_otp():
         print("🔥 VERIFY OTP ERROR:", e)
         return jsonify({"message": "Server error"}), 500
 
-# ---- REGISTER ----
 @app.route("/register", methods=["POST"])
 def register():
     try:
@@ -217,8 +190,6 @@ def register():
     except Exception as e:
         print("🔥 REGISTER ERROR:", e)
         return jsonify({"message": "Server error"}), 500
-
-# ---- VERIFY REGISTER OTP ----
 @app.route("/verify_register_otp", methods=["POST"])
 def verify_register_otp():
     try:
@@ -255,7 +226,6 @@ def verify_register_otp():
         conn.close()
 
         active_otps.pop(email, None)
-        # auto-login after successful registration
         session.permanent = True
         session["user_email"] = email
         print("VERIFY REGISTER OTP: session set ->", dict(session))
@@ -264,8 +234,6 @@ def verify_register_otp():
     except Exception as e:
         print("🔥 VERIFY REGISTER OTP ERROR:", e)
         return jsonify({"message": "Server error"}), 500
-
-# ---- GOOGLE LOGIN ----
 @app.route("/login/google")
 def login_google():
     redirect_uri = url_for("authorize_google", _external=True)
@@ -305,8 +273,6 @@ def authorize_google():
     session["user_email"] = email
     print("GOOGLE CALLBACK: session set ->", dict(session))
     return redirect("http://127.0.0.1:5500/index.html")
-
-# ---- RESET PASSWORD ----
 @app.route("/send_reset_otp", methods=["POST"])
 def send_reset_otp():
     data = request.get_json()
@@ -353,8 +319,6 @@ def reset_password_confirm():
     verified_emails.discard(email)
     otp_store.pop(email, None)
     return jsonify({"message": "✅ Password reset successfully"}), 200
-
-# ---- ✅ FIXED ADD JOB ----
 @app.route("/add_job", methods=["POST"])
 def add_job():
     try:
@@ -383,8 +347,6 @@ def add_job():
     except Exception as e:
         print("🔥 ADD JOB ERROR:", e)
         return jsonify({"message": "Server error"}), 500
-
-# ---- ✅ FIXED ADD RENTAL ----
 @app.route("/add_rental", methods=["POST"])
 def add_rental():
     try:
@@ -441,7 +403,6 @@ def get_rentals():
         print("🔥 GET RENTALS ERROR:", e)
         return jsonify({"message": "Server error"}), 500
 
-# ---- ✅ FIXED RENTAL DETAIL ----
 @app.route("/rentals/<int:rental_id>", methods=["GET"])
 def get_rental(rental_id):
     try:
@@ -489,8 +450,6 @@ def get_job(job_id):
     except Exception as e:
         print("🔥 GET JOB ERROR:", e)
         return jsonify({"message": "Server error"}), 500
-
-# ---- TRENDING ----
 @app.route("/trending", methods=["GET"])
 def get_trending():
     try:
@@ -524,8 +483,6 @@ def job_details_page():
 def rental_details_page():
     rental_id = request.args.get("id")
     return render_template("rental_details.html", rental_id=rental_id)
-
-# ---- Session helpers: /me and /logout ----
 @app.route("/me", methods=["GET"])
 def me():
     user_email = session.get("user_email")
@@ -533,8 +490,6 @@ def me():
     if not user_email:
         return jsonify({"logged_in": False}), 200
     return jsonify({"logged_in": True, "email": user_email}), 200
-
-# ---- LOGOUT ----
 @app.route("/logout", methods=["POST"])
 def logout():
     try:
@@ -545,10 +500,6 @@ def logout():
         return jsonify({"message": "Server error"}), 500
 
 
-# ----------------- RESEND OTP LOGIC (ADDED) -----------------
-# The block below is appended and does not change any existing lines above.
-# It implements a resend endpoint using the in-memory active_otps dict that already exists.
-
 RESEND_COOLDOWN_SECONDS = 60   # disable resend for 60 seconds after a send
 MAX_RESENDS_PER_WINDOW = 3     # max resends allowed in window
 RESEND_WINDOW_HOURS = 1        # window length for counting resends (hours)
@@ -558,21 +509,14 @@ resend_meta = {}               # structure: { email: {"count": int, "window_star
 def resend_otp():
     try:
         data = request.get_json() or {}
-        # Prefer client-sent email (the frontend already sends email in your flows), otherwise try session
         email = data.get("email") or session.get("user_email") or session.get("pending_email")
         if not email:
-            # intentionally vague, match your existing endpoints' style
             return jsonify({"message": "Email is required to resend OTP"}), 400
 
         now = now_utc()
-
-        # check if there is an active OTP for this email (login/register flows populate active_otps)
         record = active_otps.get(email)
         if not record:
-            # No active OTP - either expired or never requested
             return jsonify({"message": "No OTP request found for this email. Please request a new OTP."}), 400
-
-        # initialize meta for this email if missing
         meta = resend_meta.get(email, {})
         window_start = meta.get("window_start")
         count = meta.get("count", 0)
@@ -581,24 +525,18 @@ def resend_otp():
         if window_start is None:
             window_start = now
             count = 0
-
-        # reset window if expired
         if now - window_start > timedelta(hours=RESEND_WINDOW_HOURS):
             window_start = now
             count = 0
 
-        # check max resends in window
         if count >= MAX_RESENDS_PER_WINDOW:
             return jsonify({"message": "Reached maximum resend attempts. Try again later."}), 429
-
-        # check cooldown based on last_sent
         if last_sent:
             seconds_since = (now - last_sent).total_seconds()
             if seconds_since < RESEND_COOLDOWN_SECONDS:
                 cooldown_left = int(RESEND_COOLDOWN_SECONDS - seconds_since)
                 return jsonify({"message": "Please wait before resending OTP.", "cooldown": cooldown_left}), 429
 
-        # generate new OTP and update active_otps
         otp = str(random.randint(100000, 999999))
         expiry = now + timedelta(minutes=2)
         active_otps[email] = {
@@ -607,16 +545,11 @@ def resend_otp():
             "purpose": record.get("purpose", "resend"),
             "meta": record.get("meta")  # preserve registration meta if present
         }
-
-        # update resend_meta
         count += 1
         resend_meta[email] = {"count": count, "window_start": window_start, "last_sent": now}
-
-        # send the email
         sent = send_email_otp(email, otp)
         if not sent:
-            # revert active_otps/resend_meta if needed (keep simple: decrement count & last_sent)
-            # decrement count safely
+
             resend_meta[email]["count"] = max(0, resend_meta[email]["count"] - 1)
             return jsonify({"message": "❌ Failed to send OTP. Try again later."}), 500
 
