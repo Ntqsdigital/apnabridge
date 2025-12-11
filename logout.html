@@ -5,11 +5,87 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Logging out...</title>
   <script>
-    // When page loads, clear any stored login data (if you’re storing any later)
-    // For now, this just redirects back to homepage
-    window.onload = function() {
-      alert("You have been logged out successfully!");
-      window.location.href = "index.html"; // Redirect to homepage
+    async function tryFetchLogout() {
+      console.log("[logout] tryFetchLogout()");
+      try {
+        const res = await fetch("http://127.0.0.1:5000/logout", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" }
+        });
+        console.log("[logout] fetch /logout response:", res.status, res.statusText);
+        return res.ok;
+      } catch (err) {
+        console.warn("[logout] fetch /logout failed:", err);
+        return false;
+      }
+    }
+
+    async function checkServerSession() {
+      console.log("[logout] checkServerSession() -> /me");
+      try {
+        const r = await fetch("http://127.0.0.1:5000/me", { credentials: "include" });
+        const data = await r.json().catch(()=>({}));
+        console.log("[logout] /me returned:", r.status, data);
+        return data && data.logged_in === true;
+      } catch (err) {
+        console.warn("[logout] /me check failed:", err);
+        // If we cannot reach /me treat as unknown (return true to trigger fallback)
+        return true;
+      }
+    }
+
+    function submitFormLogout() {
+      console.log("[logout] submitFormLogout() - creating and submitting form (fallback)");
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "http://127.0.0.1:5000/logout";
+      form.style.display = "none";
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    function navigateLogout() {
+      console.log("[logout] navigateLogout() - window.location.href to backend logout");
+      window.location.href = "http://127.0.0.1:5000/logout";
+    }
+
+    function clearClientState() {
+      try { sessionStorage.removeItem("google_user"); } catch(e){}
+      try { localStorage.removeItem("google_user"); } catch(e){}
+      try { sessionStorage.clear(); localStorage.clear(); } catch(e){}
+      console.log("[logout] cleared local/session storage");
+    }
+
+    window.onload = async function() {
+      clearClientState();
+
+     
+      const fetchOk = await tryFetchLogout();
+
+      
+      await new Promise(r => setTimeout(r, 300));
+
+    
+      const stillLoggedIn = await checkServerSession();
+
+      if (!stillLoggedIn) {
+        
+        alert("You have been logged out successfully!");
+        console.log("[logout] server session cleared, redirecting to index.html");
+        window.location.href = "index.html";
+        return;
+      }
+
+      
+      console.warn("[logout] server still reports logged in after fetch. Trying form POST fallback.");
+      submitFormLogout();
+
+      
+      setTimeout(() => {
+        console.error("[logout] still on page after form submit; trying direct navigation fallback.");
+        navigateLogout();
+      }, 2000);
     }
   </script>
 </head>
