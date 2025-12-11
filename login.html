@@ -143,8 +143,7 @@
 <body>
   <div class="login-container">
     <h2>👤 Login to ApnaBridge</h2>
-
-    <!-- Login form -->
+    
     <div id="login-section">
       <form id="loginForm">
         <input type="email" id="email" placeholder="Email Address" required>
@@ -158,14 +157,12 @@
         <button type="submit" class="login-btn">Login</button>
       </form>
 
-      <!-- Only ONE Google Login Button -->
       <button type="button" class="google-btn" onclick="loginWithGoogle()">
         <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo">
         Login with Google
       </button>
     </div>
 
-    <!-- OTP Verification -->
     <div id="otp-section">
       <p>Enter the OTP sent to your email</p>
       <input type="text" id="otp" placeholder="Enter OTP" maxlength="6">
@@ -188,7 +185,6 @@
   <script>
     let userEmail = "";
 
-    // NEW: if not actually logged in, don't auto-use old google_user for redirect
     (function(){
       try {
         const isStillLoggedIn = localStorage.getItem("loggedIn") === "true";
@@ -198,7 +194,6 @@
       } catch (e) {}
     })();
 
-    // --- Check if user is already logged in ---
     const loggedInUser = JSON.parse(sessionStorage.getItem("google_user"));
     if (loggedInUser && loggedInUser.email) {
       alert("You are already logged in!");
@@ -210,7 +205,6 @@
       passField.type = passField.type === "password" ? "text" : "password";
     }
 
-    // Normal Login
     document.getElementById("loginForm").addEventListener("submit", async function (e) {
       e.preventDefault();
       const email = document.getElementById("email").value.trim();
@@ -248,7 +242,6 @@
       }
     });
 
-    // Verify OTP
     async function verifyOtp() {
       const otp = document.getElementById("otp").value.trim();
       const messageBox = document.getElementById("message");
@@ -278,7 +271,6 @@
       }
     }
 
-    // small helper to disable resend link and show countdown
     let resendTimer = null;
     function startResendCooldown(seconds) {
       const link = document.getElementById("resend-link");
@@ -302,7 +294,6 @@
       }, 1000);
     }
 
-    // Resend OTP (updated to call /resend_otp endpoint and respect cooldown)
     async function resendOtp() {
       if (!userEmail) return;
       const messageBox = document.getElementById("message");
@@ -338,17 +329,14 @@
       }
     }
 
-    // Google Login
     function loginWithGoogle() {
       window.location.href = "http://127.0.0.1:5000/login/google";
     }
 
-    // ---- ADDED: handleLoginSuccess for ApnaBridge auth guard ----
     function handleLoginSuccess() {
       // mark user as logged in
       localStorage.setItem("apnabridge_isLoggedIn", "true");
 
-      // redirect back to the page user wanted to open, if any
       const redirectUrl = localStorage.getItem("apnabridge_redirectAfterLogin");
       if (redirectUrl) {
         localStorage.removeItem("apnabridge_redirectAfterLogin");
@@ -358,7 +346,6 @@
       }
     }
 
-    // ---- NEW: enhanced redirect + match index.html guard (ONLY ADDED, nothing removed) ----
     function apnaBridgeGetRedirectFromQuery() {
       try {
         const params = new URLSearchParams(window.location.search);
@@ -369,33 +356,27 @@
       }
     }
 
-    // this overrides the earlier handleLoginSuccess (same name), but we did NOT change any existing line
     function handleLoginSuccess() {
-      // keep old flag for compatibility
+      
       localStorage.setItem("apnabridge_isLoggedIn", "true");
-      // key used by index.html auth guard
       localStorage.setItem("loggedIn", "true");
-
-      // 1) Prefer ?redirect=... from URL (set by index.html)
       const qRedirect = apnaBridgeGetRedirectFromQuery();
       if (qRedirect) {
         window.location.href = qRedirect;
         return;
       }
-
-      // 2) Fallback to stored redirect (if you ever set apnabridge_redirectAfterLogin)
       const redirectUrl = localStorage.getItem("apnabridge_redirectAfterLogin");
       if (redirectUrl) {
         localStorage.removeItem("apnabridge_redirectAfterLogin");
         window.location.href = redirectUrl;
       } else {
-        // 3) Default: go to home
         window.location.href = "index.html";
       }
     }
   </script>
 </body>
 </html>
+
 
 
 
