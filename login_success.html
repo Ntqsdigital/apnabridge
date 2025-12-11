@@ -54,8 +54,6 @@
 
   <script>
     const user = JSON.parse(sessionStorage.getItem("google_user"));
-
-    // If no user session found, redirect to login
     if (!user || !user.email) {
       alert("No user data found. Please log in again.");
       window.location.href = "login.html";
@@ -66,10 +64,7 @@
     }
 
     function logout() {
-      // Clear client-side session immediately
       sessionStorage.removeItem("google_user");
-
-      // Optional: clear server-side session asynchronously
       fetch("http://127.0.0.1:5000/logout", { method: "POST" })
         .then(response => response.json())
         .then(data => {
@@ -77,10 +72,11 @@
         })
         .catch(err => console.error("Logout error:", err));
 
-      // Show popup and redirect immediately
+    
       alert("You have been logged out successfully!");
       window.location.href = "login.html";
     }
   </script>
 </body>
 </html>
+
