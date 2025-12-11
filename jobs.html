@@ -112,7 +112,6 @@
     <h2>Available Jobs</h2>
     <div id="jobsContainer"></div>
 
-    <!-- 🔥 Trending Section -->
     <section class="trending">
       <h2>🔥 Trending Listings</h2>
       <ul id="trendingList"></ul>
@@ -129,7 +128,6 @@
       container.innerHTML = "";
 
       jobs.forEach(job => {
-        // truncate description for preview
         const shortDesc = (job.description || "").substring(0, 200);
         container.innerHTML += `
           <div class="job-card" onclick="viewJob(${job.id})" role="button" tabindex="0">
@@ -146,11 +144,8 @@
   }
 
   function viewJob(id) {
-    // navigate to the details page file (ensure file is job_details.html)
     window.location.href = `job_details.html?id=${encodeURIComponent(id)}`;
   }
-
-  // trending jobs on this page (optional, but useful)
   async function fetchTrendingJobs() {
     try {
       const res = await fetch("http://127.0.0.1:5000/trending");
@@ -167,13 +162,12 @@
   function escapeHtml(str){
     return str?String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"):"";
   }
-
-  // load both lists on page load
   document.addEventListener("DOMContentLoaded", () => {
     fetchJobs();
     fetchTrendingJobs();
   });
 </script>
+
 
 
 
